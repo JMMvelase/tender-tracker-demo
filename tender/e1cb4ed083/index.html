@@ -1,0 +1,711 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>WCGHGC0326/2/2026 · Tender Tracker</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href="../.././">Tender Tracker</a>
+  
+  <a href="../../dashboard/">Dashboard</a>
+  <a href="../../tenders/" aria-current="page">Tenders</a>
+  <a href="../../review/">Review</a>
+  <a href="../../companies/">Companies</a>
+  <a href="../../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <p class="crumb noprint"><a href="../../tenders/">← Tenders</a></p>
+  <h1>WCGHGC0326/2/2026</h1>
+  <p class="lede">Western Cape - Health · Supply and delivery of toilet paper, plastic bags, plastic aprons, cleaning materials and equipment to all hospitals/institutions under the control of western cape government department of health and wellness for a five (5) year period</p>
+  <p class="noprint actions">
+    <a class="btn" href="../../tender/e1cb4ed083/print/">Tender File (print / PDF)</a>
+    <span class="pill st-none">Read-only view</span>
+  </p>
+</header>
+
+<section class="facts card">
+  <div><span class="lbl">Closes</span><b>Mon 5 Oct</b>
+    <span class="pill st-none">Closed</span></div>
+  <div><span class="lbl">Briefing</span>None listed</div>
+  <div><span class="lbl">Clerk(s)</span><b>Abby</b></div>
+  <div><span class="lbl">Province</span><b>Unknown</b></div>
+  <div><span class="lbl">Stage</span><span id="stage" class="pill st-none">Not started</span></div>
+  <div><span class="lbl">Approval</span>
+<span class="pill st-none">Not asked</span></div>
+</section>
+
+
+<section class="card next-step">
+  
+  <p><span class="lbl">Next step</span> <b>Record the outcome (won, lost ...)</b></p>
+</section>
+
+
+
+<section class="card approval" id="approval" data-tender="e1cb4ed083">
+  <h2>Management approval</h2>
+  <p class="note">SOP 5.4: management approves the bid and signs off pricing before it is packaged and submitted.</p>
+  
+  <p class="muted">Not asked for yet.</p>
+  
+
+  
+
+  
+  <p class="save-msg" id="approval-msg" role="status" aria-live="polite"></p>
+
+  
+</section>
+
+
+
+
+<div class="grid wide-left">
+  
+  <section class="card">
+    <h2>Checklist</h2>
+    <p class="note">What the clerk has ticked, with who and when. Steps follow the SOP for Tenderers.</p>
+    <div class="ck-progress">
+      <div class="bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="pct-bar" style="width: 0%"></i></div>
+      <span id="pct-txt"><b>0%</b> · 0 of 13 steps</span>
+    </div>
+    <ul class="checklist" id="checklist" data-tender="e1cb4ed083">
+      
+      
+      
+      
+      <li class="ck" data-item="go_no_go" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Go / No-Go decision made
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="docs_saved" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Tender documents downloaded and saved in my folder
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="docs_read" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Documents read: scope, specifications, conditions, returnables
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="clarifications" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Clarification questions sent to the client
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="company_docs" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Company documents attached (CSD, tax clearance, B-BBEE, registrations)
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="samples" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Samples requested / prepared
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="technical" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Technical proposal done (specifications, brands, methodology)
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="pricing" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Pricing schedule completed
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="review" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Internal review done by the Tender Manager
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="approval" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Management approved the submission and signed off pricing
+            
+            <span class="pill st-none">Ticked by a manager's approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="packaged" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">All forms signed, labelled and packaged as the client asks
+            
+            <span class="pill st-none">After approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="submitted" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Submitted before the closing date and time
+            
+            <span class="pill st-none">After approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="proof" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Proof / receipt of submission saved
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+    </ul>
+    <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <div class="stack">
+    
+    <section class="card">
+      <h2>Bid details</h2>
+      <p class="note">Filled in by the clerk.</p>
+      <div class="details" id="details" data-tender="e1cb4ed083">
+        
+        
+        
+        <div class="field">
+          <label for="f-company">Bidding company</label>
+          
+          <select id="f-company" data-field="company" disabled>
+            <option value="">—</option>
+            <option>Sharp Eye</option><option>Promed</option><option>Sebenzani</option><option>Access Medical</option><option>Promed Tech</option><option>SA Wellness</option><option>New Age Technologies</option><option>Rocket Freight</option><option>Pharmacare</option><option>Infotech Pro</option><option>Liamed</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="company"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-bid_value">Total bid price (R, incl. VAT)</label>
+          
+          <input id="f-bid_value" data-field="bid_value" type="text" maxlength="200"
+                 inputmode="decimal" placeholder="e.g. 125000.00"
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="bid_value"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-bbbee_claimed">B-BBEE level claimed</label>
+          
+          <select id="f-bbbee_claimed" data-field="bbbee_claimed" disabled>
+            <option value="">—</option>
+            <option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Level 4</option><option>Level 5</option><option>Level 6</option><option>Level 7</option><option>Level 8</option><option>Non-compliant</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="bbbee_claimed"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-method">How it will be submitted</label>
+          
+          <select id="f-method" data-field="method" disabled>
+            <option value="">—</option>
+            <option>Tender box (hand delivery)</option><option>Courier</option><option>Online portal / e-tender</option><option>Email</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="method"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-receipt">Submission receipt / reference no.</label>
+          
+          <input id="f-receipt" data-field="receipt" type="text" maxlength="200"
+                 
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="receipt"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-contact">Client contact person</label>
+          
+          <input id="f-contact" data-field="contact" type="text" maxlength="200"
+                 
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="contact"></span>
+        </div>
+        
+      </div>
+    </section>
+
+    
+    <section class="card">
+      <h2>Outcome</h2>
+      <p class="note">What happened after closing (SOP 5.7).</p>
+      <select class="outcome" data-tender="e1cb4ed083" aria-label="Outcome" disabled>
+        <option value="">— not recorded —</option>
+        <option>Submitted - awaiting result</option><option>Won</option><option>Lost</option><option>Not submitted</option><option>Cancelled by client</option>
+      </select>
+      <p class="muted" data-by="e1cb4ed083"></p>
+    </section>
+    
+
+    <section class="card">
+      <h2>Notes</h2>
+      
+      <ul class="notes" id="notes">
+        
+      </ul>
+      <p class="muted">No notes yet.</p>
+    </section>
+  </div>
+</div>
+
+
+<section class="card">
+  <h2>Tender requirements</h2>
+  <p class="note">
+    <b>No document read for this tender yet</b>, so these are the standard items almost every public tender asks for. Confirm them in the tender document. 
+    
+  </p>
+  <p class="muted" id="req-txt"><b>0</b> of 6 met</p>
+  <div class="req-groups">
+  
+  <h3 class="req-kind"><span class="pill k-compulsory">Compulsory</span> <span class="muted small">4</span></h3>
+  <ul class="checklist reqs" data-tender="e1cb4ed083">
+    
+    
+    <li class="ck" data-item="req:csd" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Registered on the Central Supplier Database (CSD) - CSD number on the bid <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:tax" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Tax compliant - SARS Tax Compliance Status (TCS) PIN <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:sbd_forms" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">All SBD/MBD forms completed and signed (invitation, declaration of interest, preference points) <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:pricing" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Pricing schedule completed in full, prices including VAT <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-points">Points</span> <span class="muted small">1</span></h3>
+  <ul class="checklist reqs" data-tender="e1cb4ed083">
+    
+    
+    <li class="ck" data-item="req:bbbee" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">B-BBEE certificate or sworn affidavit (for preference points) <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-submission">Submission</span> <span class="muted small">1</span></h3>
+  <ul class="checklist reqs" data-tender="e1cb4ed083">
+    
+    
+    <li class="ck" data-item="req:closing" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Submitted before the closing date and time, as the document instructs <span class="muted small">· Standard for SA public tenders - confirm in the tender document</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  </div>
+  <p class="save-msg" id="req-msg" role="status" aria-live="polite"></p>
+</section>
+
+
+<section class="card" id="fit">
+  <h2>Which company fits this tender</h2>
+  <p class="note">Score = 60% company profile against the requirements + 40% past bids on similar tenders.
+    Profiles are kept on the <a href="../../companies/">Companies</a> page; "unknown" means the profile doesn't say yet.
+    The schedule lists <b>Promed, Sebenzani</b> for this tender (highlighted).</p>
+  
+<div class="scroll"><table class="fit-table">
+  <thead><tr><th>Company</th><th>Score</th><th>Verdict</th><th>Profile checks</th><th>Past bids</th></tr></thead>
+  <tbody>
+  
+  <tr>
+    <td><b>Sharp Eye</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 40%"></i></span> 40</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>221 bids, 9 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>WCGHSC0405/2025 (2025-11-07, 35% match): FOR THE PROVISION OF A COMPREHENSIVE CLEANING SERVICE INCLUDING EQUIPMENT AND CONSUMABLES </li><li>WCGHSC448 (2025-05-16, 33% match): RENDERING OF A COMPREHENSIVE CLEANING SERVICE TO GEORGE HOSPITAL FOR A PERIOD OF THREE (3)</li><li>WCGHSC0448/1/2025 (2026-03-13, 33% match): RENDERING OF A COMPREHENSIVE CLEANING SERVICE TO GEORGE HOSPITAL FOR A PERIOD OF THREE (3)</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr class="hl">
+    <td><b>Promed</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 40%"></i></span> 40</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>124 bids, 9 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>WCGHCC0059-2026 (2026-10-16, 42% match): BID FOR THE SUPPLY AND DELIVERY OF DISPOSABLE SYRINGES, NEEDLES, AND ACCESSORIES TO ALL HO</li><li>WCGHCC0043/2025 (2026-03-13, 41% match): FOR THE SUPPLY AND DELIVERY OF OPHTHALMOLOGY CONSUMABLES TO ALL INSTITUTIONS UNDER THE CON</li><li>WCGHCC0061/2026 (2026-09-18, 41% match): FOR THE SUPPLY AND DELIVERY OF LARYNGOSCOPES AND CONSUMABLES TO ALL INSTITUTIONS UNDER THE</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr class="hl">
+    <td><b>Sebenzani</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 40%"></i></span> 40</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>102 bids, 5 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>WCGHCC0059-2026 (2026-10-16, 42% match): BID FOR THE SUPPLY AND DELIVERY OF DISPOSABLE SYRINGES, NEEDLES, AND ACCESSORIES TO ALL HO</li><li>WCGHGC0358/2/2026 (2026-09-25, 33% match): SUPPLY AND DELIVERY OF LAUNDRY CHEMICALS AND LIQUID DOSING PUMPS TO ALL HOSPITALS AND INST</li><li>WCGHCC0018/1/2026 (2026-05-22, 32% match): WCGHCC0018/1/2026: SUPPLEMENTARY BID FOR THE SUPPLY AND DELIVERY OF THEATRE CONSUMABLES TO</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Access Medical</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 40%"></i></span> 40</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>68 bids, 6 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>WCGHCC0039/2025 (2025-10-31, 43% match): WCGHCC0039/2025: SUPPLY AND DELIVERY OF ANAESTHETIC REQUIREMENTS TO ALL HOSPITALS/INSTITUT</li><li>WCGHCC0037/2024 (2026-03-27, 42% match): WCGHCC0037/2024: BID FOR THE SUPPLY AND DELIVERY OF CATHETERS, DRAINAGE BAGS AND UROLOGICA</li><li>WCGHCC0059-2026 (2026-10-16, 42% match): BID FOR THE SUPPLY AND DELIVERY OF DISPOSABLE SYRINGES, NEEDLES, AND ACCESSORIES TO ALL HO</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Promed Tech</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 18%"></i></span> 18</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>14 bids, 1 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>WCGHCCOO38/2025 (2025-04-04, 21% match): SUPPLY AND DELIVERY OF COMFORT PACKS TO ALL DISTRICT AND SUB-DISTRICT OFFICES UNDER THE CO</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>SA Wellness</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>155 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>New Age Technologies</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>23 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Rocket Freight</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 6%"></i></span> 6</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>10 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Pharmacare</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 5%"></i></span> 5</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>8 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Infotech Pro</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 2%"></i></span> 2</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>4 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Liamed</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 1%"></i></span> 1</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 3 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">B-BBEE level not in the profile</li></ul></details>
+    </td>
+    <td>1 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  </tbody>
+</table></div>
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>Found in the folders</h2>
+    <p class="muted">No work files matched to this tender yet.</p>
+    
+    <p class="muted small">From NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet &#39;Medical and Consumables&#39;, row 707</p>
+  </section>
+
+  <section class="card">
+    <h2>History</h2>
+    <p class="muted">No changes yet.</p>
+  </section>
+</div>
+
+</div>
+<script src="../../static/tracker.js"></script>
+<script>
+Tracker.checklist(); Tracker.notes("e1cb4ed083"); Tracker.outcomeSelects();
+Tracker.details(); Tracker.approval(); Tracker.handover();
+</script>
+</body>
+</html>

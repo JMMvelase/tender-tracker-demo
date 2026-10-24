@@ -1,0 +1,1347 @@
+<!doctype html>
+<!--
+  dashboard/template.html - the layout of the Tender Tracker page.
+
+  step4_build_dashboard.py fills in the placeholders below and saves the
+  result as pipeline/dashboard.html (one file that works offline). The website
+  (server.py) builds the same page on every visit and adds its menu bar:
+    <nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href=".././">Tender Tracker</a>
+  
+  <a href="../dashboard/" aria-current="page">Dashboard</a>
+  <a href="../tenders/">Tenders</a>
+  <a href="../review/">Review</a>
+  <a href="../companies/">Companies</a>
+  <a href="../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>  <- the website's menu bar (empty in the offline file)
+    /*
+  dashboard/style.css - how the Tender Tracker looks.
+
+  Colours are set once in :root (light) and again for dark mode. Change a colour
+  there and it changes everywhere. Section order on the page:
+  header, summary cards, chart + clerk progress, tenders by clerk, calendar,
+  provinces + things to know, all upcoming tenders.
+*/
+
+/* ---- Colours and fonts ---- */
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --fg: #1d2420; --muted: #5f6b64; --line: #dfe3df;
+  --accent: #2f5d50; --ok: #2e7d4f; --warn: #a86a00; --bad: #b3261e; --grid: #e9ece9; --mutedbar: #b9c2bc;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141816; --panel: #1c211e; --fg: #e8ece9; --muted: #a2ada6; --line: #2e3531;
+    --accent: #7fb8a5; --ok: #5cc28a; --warn: #e0a640; --bad: #f07a6e; --grid: #29302c; --mutedbar: #4a544e;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--sans); }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px max(16px, 3vw) 48px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font: 400 2rem/1.15 var(--serif); margin: 0; }
+h2 { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.lede { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.lede b { color: var(--fg); }
+.meta { color: var(--muted); font-size: .8rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.btn { font: inherit; font-size: .85rem; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 5px 12px; }
+.btn:hover { border-color: var(--muted); }
+/* ---- Cards and layout ---- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; }
+.note { color: var(--muted); font-size: .8rem; margin: 2px 0 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: 16px; }
+.kpi .big { font: 400 2.5rem/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.kpi .lbl { color: var(--muted); font-size: .8rem; }
+.kpi.bad .big { color: var(--bad); }
+
+/* ---- Started vs pending chart ---- */
+.chart { position: relative; min-height: 220px; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.15); padding: 4px 10px; font-size: .8rem; white-space: nowrap; }
+.tip small { display: block; color: var(--muted); }
+
+/* ---- Progress by clerk ---- */
+.prog { display: flex; flex-direction: column; gap: 14px; }
+.prow { display: grid; grid-template-columns: 6rem 1fr auto; gap: 10px; align-items: center; }
+.prow-name { font-weight: 600; }
+.bar { height: 12px; border-radius: 6px; background: var(--grid); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ok); border-radius: 6px; }
+.prow-txt { font-size: .8rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.prow-txt b { color: var(--fg); }
+
+/* ---- Clerk buttons and dropdown ---- */
+.picker { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.name { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 6px 14px; display: inline-flex; gap: 8px; align-items: center; }
+.name:hover { border-color: var(--muted); }
+.name[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.name .count { font-size: .78rem; opacity: .75; }
+.name:focus-visible, select:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.picker label { font-size: .8rem; color: var(--muted); margin-left: 6px; }
+.empty { color: var(--muted); padding: 12px 0; }
+
+/* ---- Tables and coloured pills (red/amber/green = days left) ---- */
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: .78rem; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; font-variant-numeric: tabular-nums; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+td.desc { color: var(--muted); font-size: .8rem; min-width: 14rem; }
+.pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.u-red { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.u-amber { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+.u-green { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.s-started { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.s-pending { color: var(--muted); background: var(--grid); }
+
+/* ---- Calendar ---- */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.months { display: block; }
+.cal-bar { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "prev head next" ". today ."; align-items: center; gap: 6px 8px; margin: 16px 0 12px; }
+#cal-prev { grid-area: prev; } #cal-next { grid-area: next; } #cal-today { grid-area: today; justify-self: center; }
+.cal-head { grid-area: head; text-align: center; min-width: 0; }
+.cal-head h3 { margin: 0; font-size: 1.1rem; }
+.cal-bar .btn:disabled { opacity: .45; cursor: default; }
+.day.past { opacity: .6; }
+.month h3 { margin: 0 0 8px; font-size: .95rem; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.wd { font-size: .75rem; color: var(--muted); text-align: center; }
+.day { min-height: 4.4rem; border: 1px solid var(--line); border-radius: 6px; padding: 3px; display: flex; flex-direction: column; gap: 2px; min-width: 0; background: var(--bg); }
+.day.blank { border-color: transparent; background: transparent; }
+.day.wkend { opacity: .7; }
+.day.today { border: 2px solid var(--fg); }
+.dn { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day.today .dn { color: var(--fg); font-weight: 700; }
+.chip { font-size: .68rem; line-height: 1.25; border-radius: 4px; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.chip.brief { background: transparent; border: 1px dashed var(--muted); color: var(--fg); font-weight: 500; }
+.chip.brief.comp { border: 1.5px solid var(--bad); color: var(--bad); }
+.dim { opacity: .25; }
+.agenda { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ag { display: grid; grid-template-columns: 7rem 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ag-date { font-weight: 600; }
+.ag-items { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ag-item { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.ag-item small { color: var(--muted); }
+
+/* ---- Provinces ---- */
+.prov { display: flex; flex-direction: column; gap: 8px; }
+.pv { display: grid; grid-template-columns: 7.5rem 1fr 2rem; gap: 8px; align-items: center; }
+.pv-bar { height: 14px; border-radius: 4px; display: flex; overflow: hidden; }
+.pv-bar i { display: block; height: 100%; }
+.pv-n { text-align: right; font-weight: 600; }
+
+/* ---- Things to know ---- */
+.warn { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.warn li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.l-high { background: var(--bad); } .l-med { background: var(--warn); } .l-low { background: var(--muted); }
+
+/* ---- Stages and checklist progress ---- */
+.st-sub { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.st-prog { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.st-none { color: var(--muted); background: var(--grid); }
+.mini { display: inline-block; width: 4.5rem; height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; vertical-align: middle; }
+.mini i { display: block; height: 100%; background: var(--ok); }
+
+/* ---- Website: menu bar, login, tender page ---- */
+a { color: var(--accent); }
+.topnav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; padding: 10px max(16px, 3vw); background: var(--panel); border-bottom: 1px solid var(--line); }
+.topnav a { color: var(--fg); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+.topnav a[aria-current="page"] { border-bottom-color: var(--accent); font-weight: 600; }
+.topnav .brand { font: 400 1.15rem var(--serif); margin-right: 8px; }
+.topnav .spacer { flex: 1; }
+.topnav .who { color: var(--muted); font-size: .85rem; }
+.topnav form { margin: 0; }
+a.name { text-decoration: none; }
+header .picker { margin: 14px 0 0; }
+.btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.btn.small { font-size: .75rem; padding: 2px 9px; }
+.btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn:disabled { opacity: .6; cursor: default; }
+.muted { color: var(--muted); }
+.small { font-size: .78rem; }
+.nowrap { white-space: nowrap; }
+.error { color: var(--bad); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+code { font-size: .85em; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+.crumb { margin: 0 0 6px; font-size: .85rem; }
+
+.login { max-width: 26rem; margin: 8vh auto 0; display: flex; flex-direction: column; gap: 12px; }
+.login form { display: flex; flex-direction: column; gap: 16px; }
+.names { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.names legend { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.name-opt input { position: absolute; opacity: 0; }
+.name-opt span { display: inline-block; cursor: pointer; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 14px; }
+.name-opt input:checked + span { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.name-opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); }
+input[type=password], textarea { font: inherit; font-size: 1rem; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 100%; }
+input[type=password] { letter-spacing: .3em; max-width: 12rem; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 14px 32px; }
+.facts > div { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.facts .lbl { font-size: .75rem; color: var(--muted); }
+.grid.wide-left { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ck-progress { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 10px; }
+.ck-progress span { font-size: .85rem; color: var(--muted); }
+.ck-progress b { color: var(--fg); }
+.checklist { list-style: none; margin: 0; padding: 0; }
+.ck { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ck-main { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; flex: 1 1 18rem; }
+.ck-main input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ok); flex: none; cursor: pointer; }
+.ck[data-state="done"] .ck-label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--mutedbar); }
+.ck[data-state="na"] .ck-label { color: var(--muted); font-style: italic; }
+.ck-side { display: flex; gap: 10px; align-items: center; margin-left: 30px; }
+.ck-by { font-size: .75rem; color: var(--muted); }
+.save-msg { min-height: 1.2em; font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.note-form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-bottom: 12px; }
+.notes, .files, .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: .85rem; }
+.note-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.files li { overflow-wrap: anywhere; }
+.log { white-space: pre-wrap; font-size: .75rem; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 20rem; overflow: auto; }
+details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margin-top: 12px; }
+
+/* ---- Phones: calendar shows coloured bars instead of names ---- */
+@media (max-width: 560px) {
+  .chip { font-size: 0; height: 6px; padding: 0; }
+  .day { min-height: 2.6rem; }
+  .prow { grid-template-columns: 4.5rem 1fr; }
+  .prow-txt { grid-column: 1 / -1; text-align: left; }
+}
+/* ---- Printing / Save as PDF ---- */
+@media print {
+  :root { --bg: #fff; --panel: #fff; color-scheme: light; }
+  body { font-size: 12px; }
+  .noprint { display: none !important; }
+  .card { break-inside: avoid; border-color: #ccc; }
+  .wrap { padding: 0; }
+  .dim { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar i, .pv-bar i { transition: width .4s ease-out; } }
+
+/* ---- Approval, bid details, requirements, company fit, Tender File ---- */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.callout { border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; border: 1px solid var(--line); }
+.callout.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.callout.bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.callout.wait { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.approve-form { display: flex; flex-direction: column; gap: 8px; max-width: 40rem; margin-bottom: 8px; }
+.approve-form label, .field label { font-size: .8rem; color: var(--muted); }
+.approve-form textarea, .field input, .field select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 100%; }
+.field input:disabled, .field select:disabled { opacity: 1; color: var(--fg); background: transparent; border-style: dashed; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.k-compulsory { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.k-functionality { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.k-points { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.k-submission { color: var(--muted); background: var(--grid); }
+.k-specification { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.k-contract { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.req-kind { font-size: .9rem; margin: 18px 0 2px; display: flex; gap: 8px; align-items: center; }
+.req-groups > .req-kind:first-child { margin-top: 4px; }
+.reqs .ck-label .pill { margin-right: 4px; }
+.fit-table tr.hl td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.fit-checks { margin: 6px 0 0; padding-left: 18px; font-size: .8rem; }
+.fit-checks .r-pass { color: var(--ok); }
+.fit-checks .r-fail { color: var(--bad); }
+.fit-checks .r-unknown { color: var(--muted); }
+details summary { cursor: pointer; color: var(--accent); font-size: .8rem; }
+.company-head { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin-bottom: 12px; }
+table.kv th { width: 14rem; color: var(--muted); font-weight: 500; }
+@media print {
+  .card { padding: 10px 0; border: none; border-bottom: 1px solid #ccc; border-radius: 0; }
+  details > summary { display: none; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ---- Short tender lists: tender, then days left and closing date together on the right ---- */
+#clerk-table th.num, #clerk-table td:nth-child(2), #clerk-table td:nth-child(3),
+.short-list th.num, .short-list td.num { text-align: right; white-space: nowrap; }
+#clerk-table td:nth-child(2), #clerk-table th:nth-child(2), .short-list .days { width: 6rem; }
+#clerk-table td:nth-child(3), #clerk-table th:nth-child(3), .short-list .closes { width: 8rem; padding-right: 0; }
+
+/* ---- Warning shown before a change that cancels the approval ---- */
+.hint { display: inline-block; font-size: .72rem; color: var(--warn); font-weight: 600; margin-left: 4px; }
+.field .hint { margin-left: 0; }
+.field.check { flex-direction: row; align-items: center; gap: 8px; font-size: .85rem; color: var(--fg); align-self: end; padding-bottom: 8px; cursor: pointer; }
+.field.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ---- At risk / next actions (clerk home page, dashboard "Needs attention") ---- */
+.bad-text { color: var(--bad); }
+.actions-list, .attn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.action, .attn { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center;
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--bg); }
+.action.is-risk, .attn.is-risk, .next-step.is-risk { border-left: 4px solid var(--bad); }
+.action-main, .attn-main { flex: 1 1 22rem; min-width: 0; }
+.action-tender { font-weight: 600; }
+.action-text { margin: 4px 0 0; font-size: 1rem; }
+.action-why, .attn-why { margin: 6px 0 0; font-size: .82rem; color: var(--muted); }
+.action-side, .attn-side { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+ol.actions-list { counter-reset: step; }
+ol.actions-list > li::before { counter-increment: step; content: counter(step); font: 600 .8rem var(--sans); color: var(--muted); margin-right: 4px; }
+.next-step p { margin: 0; } .next-step p + p { margin-top: 6px; }
+.next-step .lbl { font-size: .75rem; color: var(--muted); margin-right: 6px; }
+   <- dashboard/style.css
+    {"today": "2026-10-24", "generated": "2026-10-23T13:48:27", "schedule_file": "NASH TENDER SCHEDULE 14.10.2026.xlsx", "tenders": [{"id": "836ac8ece9", "tender": "MN201-2026 (8/3/54-2026)", "tender_no": "TENDER 8/3/54-2026 / (MN201-2026)", "department": "Bergrivier - WC Local Municipality", "description": "Supply and delivery of photocopy paper for the bergrivier municipal stores from 1 july 2027 until 30 june 2030", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-10-26", "days_left": 2, "urgency": "red", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Western Cape", "stage": "In progress", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 2, "evidence": ["Thembeka/BERGRIVIER MUNICIPALITY PRICING SCHEDULE.xlsx", "Thembeka/T 8.3.54-2026 MN201-2026 (1).pdf"], "note": "Pricing schedule: brand filled (Mondi Rotatrim), prices blank", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 717", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 18, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 2 days but only 0% done (should be 75%+ by now)"}, {"id": "2e85c38fc5", "tender": "RT33-2026", "tender_no": "RT33-2026", "department": "National Treasury", "description": "The appointment of a service provider for the supply, delivery, installation, commissioning and maintenance of dna equipment, systems, accessories and related consumables for a period of 36 month", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-26", "days_left": 2, "urgency": "red", "briefing": "", "briefing_date": "2026-10-07", "briefing_compulsory": "No", "province": "National", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 5, "evidence": ["Norel/RT33-2026/9. RT33-2026 Pricing Schedule.xlsx", "Norel/RT33-2026/RT33 A.pdf", "Norel/RT33-2026/20261019120736315.pdf", "Norel/RT33-2026/20261019120921838.pdf", "Norel/RT33-2026/20261019121257125.pdf"], "note": "Pricing schedule: 44 items, brands on 17, no prices entered yet", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 718", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 26, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 2 days but only 0% done (should be 75%+ by now)"}, {"id": "611ca9940c", "tender": "HEDP004/26/27 RE-ADVERT", "tender_no": "HEDP004/26/27 RE-ADVERT", "department": "Limpopo - Health", "description": "Supply and delivery of dorsal slit medical male circumcision (mmc) packs for a period of thirty-six (36) months in the department of health: limpopo province", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-28", "days_left": 4, "urgency": "red", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Limpopo", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 719", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 4 days but only 0% done (should be 50%+ by now)"}, {"id": "e0d06a9350", "tender": "HP10-2028BIO", "tender_no": "HP10-2028BIO", "department": "Health", "description": "Hp10-2028bio: supply and delivery of small biological preparations to the department of health for the period 01 january 2028 to 31 december 2030", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-11-02", "days_left": 9, "urgency": "amber", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "National", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 712", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 9 days but only 0% done (should be 25%+ by now)"}, {"id": "92aff51daa", "tender": "EDU 05/26 NW", "tender_no": "EDU 05/26 NW", "department": "North West - Department of Education and Sport Development", "description": "Request for the establishment of a panel of service provider(s) for the supply, packaging, distribution and catalogue management of caps-compliant fet physical sciences teaching and learning support materials (ltsm) for grades 10-12 for a period of three (3) years: 2026/2027 to 2028/2029", "clerks": "Abby & Norel", "clerk_list": ["Abby", "Norel"], "closing": "2026-11-03", "days_left": 10, "urgency": "amber", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "North West", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 720", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 10 days but only 0% done (should be 25%+ by now)"}, {"id": "23431d1bdc", "tender": "EDU 06/26 NW", "tender_no": "EDU 06/26 NW", "department": "North West - Department of Education and Sport Development", "description": "Request for the establishment of panel of service(s) for the supply, packaging and distribution and catalogue management of caps compliant get technology teaching and learning support material (ltsm) for grade 8-9 for a period of three (3) a contractual duration of three (3) year 2026/2027 to 2028/2029", "clerks": "Abby & Norel", "clerk_list": ["Abby", "Norel"], "closing": "2026-11-04", "days_left": 11, "urgency": "amber", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "North West", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 721", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 11 days but only 0% done (should be 25%+ by now)"}, {"id": "90a5cd3c17", "tender": "GSDM38/2026", "tender_no": "GSDM38/2026", "department": "Gert Sibande District Municipality", "description": "Appointment of panel of service providers for supply and delivery of cleaning material for gsdm as an when it is required for the period of 36 months", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-09", "days_left": 16, "urgency": "green", "briefing": "", "briefing_date": "2026-10-23", "briefing_compulsory": "Yes", "province": "Mpumalanga", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 1, "evidence": ["Thembeka/GSDM38-2026  APPOINTMENT OF A PANEL OF SERVICE PROVIDERS FOR SUPPLY AND DELIVERY OF CLEANING MATERIAL FOR GSDM.pdf"], "note": "Compulsory briefing 23 Oct at GSDM Level 2 Auditorium", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 722", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 26, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}, {"id": "eb0756b534", "tender": "HD 02-2026/27", "tender_no": "HD 02-2026/27", "department": "City of Tshwane", "description": "Tender for the supply, delivery and off-loading of consumables for the city of tshwane health department as and when required over a three (3) year period.", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-10", "days_left": 17, "urgency": "green", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Gauteng", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 713", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}, {"id": "aabdc54f79", "tender": "W11573", "tender_no": "W11573", "department": "Water and Sanitation", "description": "Appointment of a service provider to supply and delivery of groceries (food products) and cleaning consumables to the department of water and sanitation- roodeplaat training center (rtc) as and when required for a period of thirty-six months (01 july 2027 to 30 june 2030)", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-12", "days_left": 19, "urgency": "green", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Gauteng", "stage": "In progress", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 1, "evidence": ["Thembeka/Bid Documents for W11573.pdf"], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 723", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 27, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}], "recent": [{"id": "9391c35244", "tender": "RT42-1-2025", "tender_no": "RT42-1-2025", "department": "National Treasury", "description": "Supply and delivery of bandages and dressings to the state for a period ending 31 october 2030", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-23", "days_left": -1, "urgency": "closed", "briefing": "", "briefing_date": "2026-10-02", "briefing_compulsory": "No", "province": "National", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 5, "evidence": ["Norel/20261019114803936.pdf", "Norel/20261019114932307.pdf", "Norel/20261019115051275.pdf", "Norel/20261019115152698.pdf", "Norel/20261019115302936.pdf"], "note": "5 scanned bid documents in Norel's folder (not labelled with a tender number)", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 716", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 22, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8e3905688e", "tender": "WCGHCC0059-2026", "tender_no": "WCGHCC0059-2026", "department": "Western Cape - Health", "description": "Bid for the supply and delivery of disposable syringes, needles, and accessories to all hospitals/institutions under the control of the department of health and wellness, western cape provincial government for a three-year period", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 711", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8512f77f43", "tender": "GT/GDH/032/2026", "tender_no": "GT/GDH/032/2026", "department": "Gauteng - Health", "description": "Appointment of service providers for the leasing of office space, warehouse, emergency communication centre (ecc), ems base station, and information repository for the emergency medical services (ems) head office & wellness clinic for a period of three (3) years", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 714", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "aaad2290f4", "tender": "GT/GDH/021/2026", "tender_no": "GT/GDH/021/2026", "department": "Gauteng - Health", "description": "The supply and delivery of radiology consumables for a period of three years.", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "2026-10-02", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 715", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "27c7d1bc5f", "tender": "CONTRACT NO SCM 14 OF 26-27", "tender_no": "CONTRACT NO SCM 14 OF 26-27", "department": "Msunduzi Local Municipality", "description": "Appointment of a panel of pharmaceutical wholesalers/distributors to supply and deliver medication and surgical items to msunduzi municipality", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-09", "days_left": -15, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 710", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "03c820997a", "tender": "SCMU3-2627-0070-SHE", "tender_no": "SCMU3-2627-0070-SHE", "department": "Eastern Cape - Health", "description": "Establishment of a panel of service providers for clinicians’ residential accommodation at or tambo district (nelson mandela academic hospital, mthatha regional hospital, mthatha pharmaceutical depot) for the period thirty-six (36) months.", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-07", "days_left": -17, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 708", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "f7f4e4f473", "tender": "NKTVET/2026/09/01", "tender_no": "NKTVET/2026/09/01", "department": "Nkangala TVET College", "description": "Request for porposal from a prospective suppliers for a panel of service providers to supply and deliver a (ltsm) learner and teaching support material (stationery, protective clothing, students devices, textbooks, consumables and workshop machines, computers for computer labs and students) to nkangala tvet college for the period of five (05) years.", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-06", "days_left": -18, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 709", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "5389950478", "tender": "HP02-2025AI/02", "tender_no": "HP02-2025AI/02", "department": "Health", "description": "Hp02-2025ai/02: supply and delivery of anti-infective medicines (antibiotics, antifungal, antiprotozoal and antiviral agents) to the department of health for the period ending 30 september 2028", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 705", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "61bf43dae5", "tender": "HP03-2026CHM/01", "tender_no": "HP03-2026CHM/01", "department": "Health", "description": "Hp03-2026chm/01: supply and delivery of contraceptives and hormone modulating agents to the department of health for the period ending 30 september 2029", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 706", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "e1cb4ed083", "tender": "WCGHGC0326/2/2026", "tender_no": "WCGHGC0326/2/2026", "department": "Western Cape - Health", "description": "Supply and delivery of toilet paper, plastic bags, plastic aprons, cleaning materials and equipment to all hospitals/institutions under the control of western cape government department of health and wellness for a five (5) year period", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 707", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "e32c33215a", "tender": "SMT02-26-27", "tender_no": "SMT02-26-27", "department": "Swellendam Municipality", "description": "Rental of office space to swellendam municipality for a three-year period", "clerks": "", "clerk_list": [], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 702", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "6778db0834", "tender": "RFI RT9-2027", "tender_no": "RFI RT9-2027", "department": "National Treasury", "description": "Rfi rt9-2027: supply and delivery of specialised products for infant feed, complete enteral feeds for paediatrics and adults, enteral feed supplements, other nutritional supplements and tube feeding systems to the state", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 703", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "b4dc6a6402", "tender": "RT284-2027", "tender_no": "RT284-2027", "department": "National Treasury", "description": "Rt284-2027: supply and delivery of hypodermic syringes, needles and bloodletting devices and related items to the state for the period of sixty (60) months", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-11", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 704", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "936bee1875", "tender": "TREA/028/26/MP Re-advertisemen", "tender_no": "TREA/028/26/MP Re-advertisemen", "department": "Mpumalanga - Provincial Treasury", "description": "Appointment of a service provider for audit software for internal audit for a period of 60 months (05 years) with an option to extend", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-01", "days_left": -23, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 701", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "90cb159cc8", "tender": "RFP08/26", "tender_no": "RFP08/26", "department": "Kwa-Zulu Natal - Ithala Development Finance Corporation", "description": "Appointment of a service provider to render 24-hour security guarding services at isithebe industrial estate in kwa-zulu natal for a period of 36 months.", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-03", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 696", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "d762777fe2", "tender": "CED 12/2026-2027", "tender_no": "CED 12/2026-2027", "department": "Cederberg Municipality", "description": "Supply and delivery of tissue paper products to cederberg municipality for a multi-year period ending 30 june 2029", "clerks": "", "clerk_list": [], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 697", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "90a3d4eab0", "tender": "CED 13/2026-2027", "tender_no": "CED 13/2026-2027", "department": "Cederberg Municipality", "description": "Supply, delivery and off-loading of cleaning materials and equipment to cederberg municipality for a multi-year period ending 30 june 2029", "clerks": "", "clerk_list": [], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 698", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8425f967c9", "tender": "E3390CXMWP", "tender_no": "E3390CXMWP", "department": "ESKOM", "description": "Rendering equipped and fully resourced mobile health clinic services in 9 provinces", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 699", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "6a5e987175", "tender": "RE - A042 - 2025/26", "tender_no": "RE - A042 - 2025/26", "department": "Newcastle Local Municipality", "description": "Re- advertisement: provision of external security services to newcastle municipality for a period of 36 months", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-16", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 700", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "ea6250247c", "tender": "DTPS-B014/26/27", "tender_no": "DTPS-B014/26/27", "department": "Dr Nkosazana Dlamini Zuma Local Municipality", "description": "Provision of office space for tourism office for a period of 3 years", "clerks": "", "clerk_list": [], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-09", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 693", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "7563c7cef1", "tender": "RFP10/26", "tender_no": "RFP10/26", "department": "Kwa-Zulu Natal - Ithala Development Finance Corporation", "description": "Appointment of a service provider to render 24 hour security guarding services at madadeni industrial estate in kwazulu-natal for a period of 36 months", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-03", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 694", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "1cdb8a1e8d", "tender": "Q13-2026", "tender_no": "Q13-2026", "department": "Overberg District Municipality", "description": "Security, patrol, and access control services at die dam and uilenkraalsmond resorts sites of the overberg district municipality for the period 01 – 31 october 2026", "clerks": "", "clerk_list": [], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 695", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "ad8d96ace0", "tender": "NDOH 08-2026/2027", "tender_no": "NDOH 08-2026/2027", "department": "Health", "description": "Appointment of a service provider to render physical security services to the national department of health offices (dr ab xuma) and the medical bureau for occupational diseases and the compensation commissioner for occupational diseases (mbod/ccod) for a period of 03 years.", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-28", "days_left": -26, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 692", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "afa4ac6eb7", "tender": "WCGHGC0358/2/2026", "tender_no": "WCGHGC0358/2/2026", "department": "Western Cape - Health", "description": "Supply and delivery of laundry chemicals and liquid dosing pumps to all hospitals and institutions of the western cape department of health and wellness for a five (5) year period", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-25", "days_left": -29, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-17", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 687", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "968384e8b3", "tender": "GT/GDH/020/2026", "tender_no": "GT/GDH/020/2026", "department": "Gauteng - Health", "description": "The supply, delivery, installation, commissioning and maintenance of general and specialised radiography imaging equipment at various gauteng health institutions for a period of three years", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-25", "days_left": -29, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 691", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}], "clerks": [{"name": "Abby", "total": 5, "submitted": 0, "in_progress": 1, "not_started": 4, "progress": 0, "next_deadline": "2026-10-26"}, {"name": "Norel", "total": 4, "submitted": 0, "in_progress": 1, "not_started": 3, "progress": 0, "next_deadline": "2026-10-26"}, {"name": "Thembeka", "total": 4, "submitted": 0, "in_progress": 3, "not_started": 1, "progress": 0, "next_deadline": "2026-10-26"}], "events": [{"date": "2026-10-26", "type": "closing", "tender": "MN201-2026 (8/3/54-2026)", "id": "836ac8ece9", "clerks": "Thembeka", "flag": "red"}, {"date": "2026-10-26", "type": "closing", "tender": "RT33-2026", "id": "2e85c38fc5", "clerks": "Norel & Abby", "flag": "red"}, {"date": "2026-10-28", "type": "closing", "tender": "HEDP004/26/27 RE-ADVERT", "id": "611ca9940c", "clerks": "Norel & Abby", "flag": "red"}, {"date": "2026-11-02", "type": "closing", "tender": "HP10-2028BIO", "id": "e0d06a9350", "clerks": "Abby", "flag": "amber"}, {"date": "2026-11-03", "type": "closing", "tender": "EDU 05/26 NW", "id": "92aff51daa", "clerks": "Abby & Norel", "flag": "amber"}, {"date": "2026-11-04", "type": "closing", "tender": "EDU 06/26 NW", "id": "23431d1bdc", "clerks": "Abby & Norel", "flag": "amber"}, {"date": "2026-11-09", "type": "closing", "tender": "GSDM38/2026", "id": "90a5cd3c17", "clerks": "Thembeka", "flag": "green"}, {"date": "2026-11-10", "type": "closing", "tender": "HD 02-2026/27", "id": "eb0756b534", "clerks": "Thembeka", "flag": "green"}, {"date": "2026-11-12", "type": "closing", "tender": "W11573", "id": "aabdc54f79", "clerks": "Thembeka", "flag": "green"}], "warnings": [{"level": "high", "id": "836ac8ece9", "text": "MN201-2026 (8/3/54-2026) closes in 2 days and is not marked submitted (0% of checklist done)."}, {"level": "high", "id": "2e85c38fc5", "text": "RT33-2026 closes in 2 days and is not marked submitted (0% of checklist done)."}, {"level": "med", "text": "5 of 9 upcoming tenders are not started (nothing ticked and no work files in a folder)."}, {"level": "med", "text": "25 tenders closed in the last 30 days have no outcome recorded yet."}, {"level": "high", "text": "RT33-2026 pricing schedule has no prices entered (0 of 44 items). Closes 26 Oct."}, {"level": "high", "text": "Bergrivier MN201-2026 pricing schedule has no prices entered (0 of 2 items). Closes 26 Oct."}, {"level": "med", "text": "Norel's 5 scanned PDFs have no tender number on them; assumed to be for RT42-1-2025."}, {"level": "low", "text": "16 past tenders have no closing date; 3 have a wrong-looking year."}, {"level": "low", "text": "712 past tenders have no outcome (won / lost / submitted) recorded in the schedule."}], "links": true, "base": "../", "built": "23 Oct 13:48"}    <- the pipeline's data (dashboard_files/*.json)
+    /*
+  dashboard/app.js - draws every part of the Tender Tracker page.
+
+  The data comes from the <script id="data"> block that step4_build_dashboard.py
+  (offline file) or server.py (website) writes into the page:
+  D.tenders, D.clerks, D.events, D.warnings, D.today, D.built.
+  D.links is true on the website: tender names then open the tender's checklist.
+
+  Stages: Submitted / In progress / Not started (rules in tracker.py).
+
+  Sections (each is one function below):
+    drawAttention  "Needs attention": at-risk tenders and approvals waiting
+    drawStage      bar chart: all upcoming / submitted / in progress / not started
+    drawProgress   progress bar per clerk
+    drawClerk      clerk buttons, dropdown and that clerk's tender table
+    drawCalendar   one month grid (with Previous/Next) + that month's dates
+    drawProvinces  tenders per province
+    drawWarnings   "Things to know"
+    fillTable      shared: fills a table body with tender rows
+*/
+(() => {
+  // ---- Data and small helpers ---------------------------------------------
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Dates are handled in UTC so a date never shifts by a day because of the time zone.
+  const day = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const fDay = (d) => `${WD[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`;
+  // true if tender/event t belongs to clerk `name` (no name = everyone)
+  const has = (t, name) => !name || String(t.clerks).split(' & ').includes(name);
+  const pill = (text, cls) => el('span', 'pill ' + cls, text);
+  const today = day(D.today);
+  let picked = null;          // the clerk currently selected (null = all clerks)
+
+  // ---- Totals for the summary cards ---------------------------------------
+  const T = D.tenders;
+  const tot = {
+    up: T.length,
+    sub: T.filter((t) => t.stage === 'Submitted').length,
+    st: T.filter((t) => t.stage === 'In progress').length,
+    pe: T.filter((t) => t.stage === 'Not started').length,
+    d7: T.filter((t) => Number(t.days_left) <= 7).length,
+    risk: T.filter((t) => t.risk === 'at_risk').length,
+    wait: T.filter((t) => t.approval === 'requested').length,
+  };
+  const stageCls = (s) => (s === 'Submitted' ? 'st-sub' : s === 'In progress' ? 'st-prog' : 'st-none');
+  // A tender's name: a link to its checklist on the website, plain text offline.
+  // Link to a tender's page. D.base is set only in the read-only demo (plain files, e.g. "../").
+  const tenderLink = (id) => (D.base ? `${D.base}tender/${id}/` : `/tender/${id}`);
+  const tenderName = (t) => {
+    if (!D.links || !t.id) return document.createTextNode(t.tender);
+    const a = el('a', null, t.tender); a.href = tenderLink(t.id); return a;
+  };
+
+  // ---- Header line and the four summary cards -------------------------------
+  $('#k-up').textContent = tot.up; $('#k-sub').textContent = tot.sub; $('#k-st').textContent = tot.st; $('#k-pe').textContent = tot.pe; $('#k-risk').textContent = tot.risk;
+  const tk = $('#takeaway');
+  tk.append(el('b', null, String(tot.risk)), ' of ', el('b', null, String(tot.up)), ' upcoming tenders are at risk',
+    tot.wait ? ', ' : '. ', ...(tot.wait ? [el('b', null, String(tot.wait)), ' waiting for approval. '] : []),
+    el('b', null, String(tot.d7)), ' close within 7 days; ', el('b', null, String(tot.sub)), ' submitted.');
+  $('#asof').textContent = `Figures as of ${fDay(today)} ${today.getUTCFullYear()} · tender data read ${D.built}`;
+  $('#print').addEventListener('click', () => window.print());
+
+  // ---- Started vs pending chart ---------------------------------------------
+  // Drawn as SVG at the card's current width; redrawn when the window resizes.
+  function drawStage() {
+    const box = $('#stage-chart'); box.replaceChildren();
+    const rows = [{ k: 'All upcoming', n: tot.up, c: 'var(--fg)' }, { k: 'Submitted', n: tot.sub, c: 'var(--ok)' },
+      { k: 'In progress', n: tot.st, c: 'var(--accent)' }, { k: 'Not started', n: tot.pe, c: 'var(--mutedbar)' }];
+    const W = Math.max(260, box.clientWidth), H = 220, top = 28, bottom = 30;
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    const band = W / rows.length, bw = Math.min(72, band * 0.6);
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', '100%'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Bar chart of upcoming, submitted, in progress and not started tenders');
+    const mk = (tag, attrs, text) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; };
+    svg.append(mk('line', { x1: 0, x2: W, y1: H - bottom, y2: H - bottom, stroke: 'var(--line)' }));
+    const tip = el('div', 'tip'); tip.hidden = true;
+    rows.forEach((r, i) => {
+      const h = (H - top - bottom) * r.n / max, x = band * i + (band - bw) / 2, y = H - bottom - h;
+      const rect = mk('rect', { x, y, width: bw, height: Math.max(h, 0), rx: 4 }); rect.style.fill = r.c;
+      rect.addEventListener('mousemove', (ev) => {
+        tip.hidden = false; tip.replaceChildren(el('small', null, r.k), el('div', null, r.n + ' tenders'));
+        const b = box.getBoundingClientRect();
+        tip.style.left = Math.min(ev.clientX - b.left + 12, box.clientWidth - tip.offsetWidth - 4) + 'px';
+        tip.style.top = Math.max(0, ev.clientY - b.top - 36) + 'px';
+      });
+      rect.addEventListener('mouseleave', () => { tip.hidden = true; });
+      svg.append(rect);
+      const v = mk('text', { x: band * i + band / 2, y: y - 8, 'text-anchor': 'middle' }, r.n); v.style.cssText = 'fill:var(--fg);font:1.25rem var(--serif)';
+      const l = mk('text', { x: band * i + band / 2, y: H - 10, 'text-anchor': 'middle' }, r.k); l.style.cssText = 'fill:var(--muted);font-size:.8rem';
+      svg.append(v, l);
+    });
+    box.append(svg, tip);
+  }
+
+  // ---- Progress by clerk -----------------------------------------------------
+  // Green bar = average checklist completion over that clerk's upcoming tenders.
+  function drawProgress() {
+    const box = $('#prog'); box.replaceChildren();
+    D.clerks.forEach((c) => {
+      const row = el('div', 'prow');
+      row.append(el('div', 'prow-name', c.name));
+      const bar = el('div', 'bar'); bar.setAttribute('role', 'progressbar'); bar.setAttribute('aria-valuenow', c.progress);
+      bar.setAttribute('aria-valuemin', 0); bar.setAttribute('aria-valuemax', 100); bar.setAttribute('aria-label', c.name + ' progress');
+      const fill = el('i'); fill.style.width = c.progress + '%'; bar.append(fill); row.append(bar);
+      const txt = el('div', 'prow-txt');
+      if (Number(c.total) === 0) txt.textContent = 'No upcoming tenders';
+      else txt.append(el('b', null, c.progress + '%'), ` · ${c.submitted} of ${c.total} submitted`);
+      row.append(txt); box.append(row);
+    });
+  }
+
+  // ---- Tender tables --------------------------------------------------------
+  // cols = which fields to show, in order. Days left and stage become coloured pills.
+  function fillTable(tbody, rows, cols) {
+    tbody.replaceChildren();
+    rows.forEach((t) => {
+      const tr = el('tr');
+      cols.forEach((c) => {
+        const td = el('td');
+        if (c === 'tender') td.append(tenderName(t));
+        else if (c === 'days_left') td.append(pill(String(t.days_left), 'u-' + t.urgency));
+        else if (c === 'stage') td.append(pill(t.stage, stageCls(t.stage)));
+        else if (c === 'pct') {
+          const bar = el('span', 'mini'); const f = el('i'); f.style.width = t.pct + '%'; bar.append(f);
+          td.append(bar, ` ${t.done}/${t.total}`); td.style.whiteSpace = 'nowrap';
+        }
+        else if (c === 'closing' || c === 'briefing') { td.textContent = t[c] ? fDay(day(t[c])) : ''; td.style.whiteSpace = 'nowrap'; }
+        else td.textContent = t[c] == null ? '' : String(t[c]);
+        if (c === 'description') td.className = 'desc';
+        if (c === 'briefing' && t.briefing_compulsory === 'Yes') td.append(' ', pill('Compulsory', 'u-red'));
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+  }
+
+  // ---- Calendar ---------------------------------------------------------------
+  // ONE month at a time. "Previous" / "Next" move a month; "This month" jumps back.
+  // The list under the grid shows only that month's dates.
+  // Events of clerks other than the selected one are faded (class 'dim').
+  const firstOf = (d) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  const addMonths = (d, n) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
+  const monthName = (d) => `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  let calMonth = firstOf(today);  // the month on screen
+
+  // How many events fall before / after the month on screen (shown on the buttons).
+  function eventsOutside(m) {
+    const start = iso(m), next = iso(addMonths(m, 1));
+    return { before: D.events.filter((e) => e.date < start).length,
+             after: D.events.filter((e) => e.date >= next).length };
+  }
+
+  function drawCalendar() {
+    const m = calMonth, box = $('#cal'); box.replaceChildren();
+    const start = iso(m), next = iso(addMonths(m, 1));
+    const ev = D.events.filter((e) => e.date >= start && e.date < next);
+    const byDate = {};
+    ev.forEach((e) => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+    // Month bar: title + buttons
+    const out = eventsOutside(m);
+    $('#cal-title').textContent = monthName(m);
+    $('#cal-prev').textContent = '‹ ' + MONTHS[addMonths(m, -1).getUTCMonth()].slice(0, 3) + (out.before ? ` (${out.before})` : '');
+    $('#cal-next').textContent = MONTHS[addMonths(m, 1).getUTCMonth()].slice(0, 3) + (out.after ? ` (${out.after})` : '') + ' ›';
+    $('#cal-today').disabled = +m === +firstOf(today);
+    $('#cal-count').textContent = ev.length
+      ? `${ev.filter((e) => e.type !== 'briefing').length} closing, ${ev.filter((e) => e.type === 'briefing').length} briefing this month`
+      : 'Nothing this month';
+
+    const grid = el('div', 'cal');
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach((w) => grid.append(el('div', 'wd', w)));
+    const lead = (m.getUTCDay() + 6) % 7;
+    for (let i = 0; i < lead; i++) grid.append(el('div', 'day blank'));
+    const days = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 0)).getUTCDate();
+    for (let d = 1; d <= days; d++) {
+      const dt = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), d));
+      const cell = el('div', 'day');
+      if (dt.getUTCDay() === 0 || dt.getUTCDay() === 6) cell.classList.add('wkend');
+      if (+dt === +today) cell.classList.add('today');
+      if (dt < today) cell.classList.add('past');
+      cell.append(el('span', 'dn', String(d)));
+      (byDate[iso(dt)] || []).forEach((e) => {
+        const brief = e.type === 'briefing';
+        const chip = el('div', 'chip ' + (brief ? 'brief' + (e.flag === 'compulsory' ? ' comp' : '') : 'u-' + e.flag), (brief ? 'Brief: ' : '') + e.tender);
+        chip.title = (brief ? 'Briefing: ' : 'Closes: ') + e.tender + ' (' + e.clerks + ')';
+        if (picked && !has(e, picked)) chip.classList.add('dim');
+        cell.append(chip);
+      });
+      grid.append(cell);
+    }
+    box.append(grid);
+
+    const ag = $('#agenda'); ag.replaceChildren();
+    const keys = Object.keys(byDate).sort();
+    if (!keys.length) ag.append(el('li', 'empty', `No closing dates or briefings in ${monthName(m)}.`));
+    keys.forEach((k) => {
+      const li = el('li', 'ag');
+      li.append(el('div', 'ag-date', fDay(day(k))));
+      const items = el('div', 'ag-items');
+      byDate[k].forEach((e) => {
+        const brief = e.type === 'briefing';
+        const it = el('div', 'ag-item');
+        it.append(pill(brief ? (e.flag === 'compulsory' ? 'Compulsory briefing' : 'Briefing') : 'Closes', brief ? (e.flag === 'compulsory' ? 'u-red' : 's-pending') : 'u-' + e.flag));
+        it.append(el('span', null, e.tender), el('small', null, e.clerks));
+        if (picked && !has(e, picked)) it.classList.add('dim');
+        items.append(it);
+      });
+      li.append(items); ag.append(li);
+    });
+  }
+  function moveMonth(n) { calMonth = n === 0 ? firstOf(today) : addMonths(calMonth, n); drawCalendar(); }
+  $('#cal-prev').addEventListener('click', () => moveMonth(-1));
+  $('#cal-next').addEventListener('click', () => moveMonth(1));
+  $('#cal-today').addEventListener('click', () => moveMonth(0));
+  // Arrow keys move months when the calendar bar has focus.
+  $('#cal-bar').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') moveMonth(-1);
+    if (e.key === 'ArrowRight') moveMonth(1);
+  });
+
+  // ---- Tenders by province ----------------------------------------------------
+  // Bar length = number of tenders; green part = started, grey part = pending.
+  function drawProvinces() {
+    const m = {};
+    T.forEach((t) => { const r = m[t.province] || (m[t.province] = { p: t.province, n: 0, s: 0 }); r.n++; if (t.stage !== 'Not started') r.s++; });
+    const rows = Object.values(m).sort((a, b) => b.n - a.n || a.p.localeCompare(b.p));
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    const box = $('#prov'); box.replaceChildren();
+    rows.forEach((r) => {
+      const row = el('div', 'pv');
+      row.append(el('div', null, r.p));
+      const bar = el('div', 'pv-bar'); bar.style.width = (100 * r.n / max) + '%';
+      const s = el('i'); s.style.width = (100 * r.s / r.n) + '%'; s.style.background = 'var(--ok)';
+      const p = el('i'); p.style.width = (100 * (r.n - r.s) / r.n) + '%'; p.style.background = 'var(--mutedbar)';
+      bar.append(s, p);
+      const wrap = el('div'); wrap.append(bar);
+      row.append(wrap, el('div', 'pv-n', String(r.n)));
+      box.append(row);
+    });
+  }
+
+  // ---- Needs attention: at-risk tenders and approvals waiting, most urgent first --
+  const daysText = (n) => (Number(n) === 0 ? 'Closes today' : Number(n) === 1 ? '1 day left' : `${n} days left`);
+  function drawAttention() {
+    const box = $('#attn'); box.replaceChildren();
+    const risky = T.filter((t) => t.risk === 'at_risk').sort((a, b) => a.days_left - b.days_left);
+    const waiting = T.filter((t) => t.approval === 'requested' && t.risk !== 'at_risk');
+    if (!risky.length && !waiting.length) { box.append(el('p', 'empty', 'Nothing needs attention right now. Everything is on track.')); return; }
+    const list = el('ul', 'attn-list');
+    risky.forEach((t) => {
+      const li = el('li', 'attn is-risk');
+      const main = el('div', 'attn-main'); main.append(tenderName(t), el('span', 'muted small', ' · ' + (t.clerks || 'no clerk')));
+      main.append(el('div', 'attn-why', t.risk_reason));
+      const side = el('div', 'attn-side'); side.append(pill(daysText(t.days_left), 'u-' + t.urgency), el('span', 'muted small', fDay(day(t.closing))));
+      li.append(main, side); list.append(li);
+    });
+    waiting.forEach((t) => {
+      const li = el('li', 'attn');
+      const main = el('div', 'attn-main'); main.append(tenderName(t), el('span', 'muted small', ' · ' + (t.clerks || 'no clerk')));
+      main.append(el('div', 'attn-why', 'Waiting for your approval (asked by ' + t.approval_by + ')'));
+      const side = el('div', 'attn-side'); side.append(pill(daysText(t.days_left), 'u-' + t.urgency), el('span', 'muted small', fDay(day(t.closing))));
+      li.append(main, side); list.append(li);
+    });
+    box.append(list);
+  }
+
+  // ---- Things to know ---------------------------------------------------------
+  function drawWarnings() {
+    $('#warn').replaceChildren(...D.warnings.map((w) => {
+      const li = el('li'); const txt = el('span', null, w.text + ' ');
+      if (D.links && w.id) { const a = el('a', null, 'Open'); a.href = tenderLink(w.id); txt.append(a); }
+      li.append(el('span', 'dot l-' + w.level), txt); return li;
+    }));
+  }
+
+  // ---- Clerk picker -------------------------------------------------------------
+  // Clicking a name (or choosing in the dropdown) selects that clerk; clicking it again shows everyone.
+  const select = $('#clerk-select');
+  select.append(new Option('All clerks', ''), ...D.clerks.map((c) => new Option(c.name, c.name)));
+  select.addEventListener('change', () => setClerk(select.value || null));
+  $('#names').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-name]');
+    if (b) setClerk(picked === b.dataset.name ? null : b.dataset.name);
+  });
+
+  function drawClerk() {
+    const names = $('#names');
+    names.replaceChildren(...D.clerks.map((c) => {
+      const b = el('button', 'name'); b.type = 'button'; b.dataset.name = c.name;
+      b.setAttribute('aria-pressed', String(picked === c.name));
+      b.append(el('span', null, c.name), el('span', 'count', String(c.total)));
+      return b;
+    }));
+    select.value = picked || '';
+    const sum = $('#clerk-sum'); sum.replaceChildren();
+    const c = D.clerks.find((x) => x.name === picked);
+    if (c && Number(c.total) > 0) {
+      sum.append(c.name + ' is on ', el('b', null, String(c.total)), ' upcoming tenders: ', el('b', null, String(c.submitted)), ' submitted, ',
+        el('b', null, String(c.in_progress)), ' in progress, ', el('b', null, String(c.not_started)), ' not started. Next deadline ',
+        el('b', null, fDay(day(c.next_deadline))), '.');
+    } else if (!c) sum.textContent = 'Showing every clerk. Pick a name to narrow the list.';
+    const rows = T.filter((t) => has(t, picked));
+    // Short list: tender, days left, closing date (last). Clerk, checklist, requirements and
+    // description are only on the tender's own page.
+    fillTable($('#clerk-table tbody'), rows, ['tender', 'days_left', 'closing']);
+    $('#clerk-table').hidden = rows.length === 0;
+    const empty = $('#clerk-empty'); empty.hidden = rows.length > 0;
+    if (!rows.length) empty.textContent = picked + ' has no upcoming tenders in the schedule.';
+  }
+
+  // Selecting a clerk redraws only the parts that depend on it.
+  function setClerk(name) { picked = name; drawClerk(); drawCalendar(); }
+
+  // ---- First draw ----------------------------------------------------------------
+  drawAttention(); drawStage(); drawProgress(); drawClerk(); drawCalendar(); drawProvinces(); drawWarnings();
+  fillTable($('#all-table tbody'), T, ['tender', 'department', 'clerks', 'closing', 'days_left', 'stage', 'pct', 'province', 'briefing']);
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawStage, 150); });
+})();
+  <- dashboard/app.js
+
+  Each <section> below is one card on the dashboard. The empty elements with
+  an id (e.g. id="prog") are filled in by app.js.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tender Tracker</title>
+<style>
+/*
+  dashboard/style.css - how the Tender Tracker looks.
+
+  Colours are set once in :root (light) and again for dark mode. Change a colour
+  there and it changes everywhere. Section order on the page:
+  header, summary cards, chart + clerk progress, tenders by clerk, calendar,
+  provinces + things to know, all upcoming tenders.
+*/
+
+/* ---- Colours and fonts ---- */
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --fg: #1d2420; --muted: #5f6b64; --line: #dfe3df;
+  --accent: #2f5d50; --ok: #2e7d4f; --warn: #a86a00; --bad: #b3261e; --grid: #e9ece9; --mutedbar: #b9c2bc;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141816; --panel: #1c211e; --fg: #e8ece9; --muted: #a2ada6; --line: #2e3531;
+    --accent: #7fb8a5; --ok: #5cc28a; --warn: #e0a640; --bad: #f07a6e; --grid: #29302c; --mutedbar: #4a544e;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--sans); }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px max(16px, 3vw) 48px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font: 400 2rem/1.15 var(--serif); margin: 0; }
+h2 { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.lede { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.lede b { color: var(--fg); }
+.meta { color: var(--muted); font-size: .8rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.btn { font: inherit; font-size: .85rem; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 5px 12px; }
+.btn:hover { border-color: var(--muted); }
+/* ---- Cards and layout ---- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; }
+.note { color: var(--muted); font-size: .8rem; margin: 2px 0 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: 16px; }
+.kpi .big { font: 400 2.5rem/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.kpi .lbl { color: var(--muted); font-size: .8rem; }
+.kpi.bad .big { color: var(--bad); }
+
+/* ---- Started vs pending chart ---- */
+.chart { position: relative; min-height: 220px; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.15); padding: 4px 10px; font-size: .8rem; white-space: nowrap; }
+.tip small { display: block; color: var(--muted); }
+
+/* ---- Progress by clerk ---- */
+.prog { display: flex; flex-direction: column; gap: 14px; }
+.prow { display: grid; grid-template-columns: 6rem 1fr auto; gap: 10px; align-items: center; }
+.prow-name { font-weight: 600; }
+.bar { height: 12px; border-radius: 6px; background: var(--grid); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ok); border-radius: 6px; }
+.prow-txt { font-size: .8rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.prow-txt b { color: var(--fg); }
+
+/* ---- Clerk buttons and dropdown ---- */
+.picker { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.name { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 6px 14px; display: inline-flex; gap: 8px; align-items: center; }
+.name:hover { border-color: var(--muted); }
+.name[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.name .count { font-size: .78rem; opacity: .75; }
+.name:focus-visible, select:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.picker label { font-size: .8rem; color: var(--muted); margin-left: 6px; }
+.empty { color: var(--muted); padding: 12px 0; }
+
+/* ---- Tables and coloured pills (red/amber/green = days left) ---- */
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: .78rem; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; font-variant-numeric: tabular-nums; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+td.desc { color: var(--muted); font-size: .8rem; min-width: 14rem; }
+.pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.u-red { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.u-amber { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+.u-green { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.s-started { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.s-pending { color: var(--muted); background: var(--grid); }
+
+/* ---- Calendar ---- */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.months { display: block; }
+.cal-bar { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "prev head next" ". today ."; align-items: center; gap: 6px 8px; margin: 16px 0 12px; }
+#cal-prev { grid-area: prev; } #cal-next { grid-area: next; } #cal-today { grid-area: today; justify-self: center; }
+.cal-head { grid-area: head; text-align: center; min-width: 0; }
+.cal-head h3 { margin: 0; font-size: 1.1rem; }
+.cal-bar .btn:disabled { opacity: .45; cursor: default; }
+.day.past { opacity: .6; }
+.month h3 { margin: 0 0 8px; font-size: .95rem; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.wd { font-size: .75rem; color: var(--muted); text-align: center; }
+.day { min-height: 4.4rem; border: 1px solid var(--line); border-radius: 6px; padding: 3px; display: flex; flex-direction: column; gap: 2px; min-width: 0; background: var(--bg); }
+.day.blank { border-color: transparent; background: transparent; }
+.day.wkend { opacity: .7; }
+.day.today { border: 2px solid var(--fg); }
+.dn { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day.today .dn { color: var(--fg); font-weight: 700; }
+.chip { font-size: .68rem; line-height: 1.25; border-radius: 4px; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.chip.brief { background: transparent; border: 1px dashed var(--muted); color: var(--fg); font-weight: 500; }
+.chip.brief.comp { border: 1.5px solid var(--bad); color: var(--bad); }
+.dim { opacity: .25; }
+.agenda { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ag { display: grid; grid-template-columns: 7rem 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ag-date { font-weight: 600; }
+.ag-items { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ag-item { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.ag-item small { color: var(--muted); }
+
+/* ---- Provinces ---- */
+.prov { display: flex; flex-direction: column; gap: 8px; }
+.pv { display: grid; grid-template-columns: 7.5rem 1fr 2rem; gap: 8px; align-items: center; }
+.pv-bar { height: 14px; border-radius: 4px; display: flex; overflow: hidden; }
+.pv-bar i { display: block; height: 100%; }
+.pv-n { text-align: right; font-weight: 600; }
+
+/* ---- Things to know ---- */
+.warn { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.warn li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.l-high { background: var(--bad); } .l-med { background: var(--warn); } .l-low { background: var(--muted); }
+
+/* ---- Stages and checklist progress ---- */
+.st-sub { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.st-prog { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.st-none { color: var(--muted); background: var(--grid); }
+.mini { display: inline-block; width: 4.5rem; height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; vertical-align: middle; }
+.mini i { display: block; height: 100%; background: var(--ok); }
+
+/* ---- Website: menu bar, login, tender page ---- */
+a { color: var(--accent); }
+.topnav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; padding: 10px max(16px, 3vw); background: var(--panel); border-bottom: 1px solid var(--line); }
+.topnav a { color: var(--fg); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+.topnav a[aria-current="page"] { border-bottom-color: var(--accent); font-weight: 600; }
+.topnav .brand { font: 400 1.15rem var(--serif); margin-right: 8px; }
+.topnav .spacer { flex: 1; }
+.topnav .who { color: var(--muted); font-size: .85rem; }
+.topnav form { margin: 0; }
+a.name { text-decoration: none; }
+header .picker { margin: 14px 0 0; }
+.btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.btn.small { font-size: .75rem; padding: 2px 9px; }
+.btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn:disabled { opacity: .6; cursor: default; }
+.muted { color: var(--muted); }
+.small { font-size: .78rem; }
+.nowrap { white-space: nowrap; }
+.error { color: var(--bad); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+code { font-size: .85em; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+.crumb { margin: 0 0 6px; font-size: .85rem; }
+
+.login { max-width: 26rem; margin: 8vh auto 0; display: flex; flex-direction: column; gap: 12px; }
+.login form { display: flex; flex-direction: column; gap: 16px; }
+.names { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.names legend { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.name-opt input { position: absolute; opacity: 0; }
+.name-opt span { display: inline-block; cursor: pointer; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 14px; }
+.name-opt input:checked + span { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.name-opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); }
+input[type=password], textarea { font: inherit; font-size: 1rem; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 100%; }
+input[type=password] { letter-spacing: .3em; max-width: 12rem; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 14px 32px; }
+.facts > div { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.facts .lbl { font-size: .75rem; color: var(--muted); }
+.grid.wide-left { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ck-progress { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 10px; }
+.ck-progress span { font-size: .85rem; color: var(--muted); }
+.ck-progress b { color: var(--fg); }
+.checklist { list-style: none; margin: 0; padding: 0; }
+.ck { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ck-main { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; flex: 1 1 18rem; }
+.ck-main input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ok); flex: none; cursor: pointer; }
+.ck[data-state="done"] .ck-label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--mutedbar); }
+.ck[data-state="na"] .ck-label { color: var(--muted); font-style: italic; }
+.ck-side { display: flex; gap: 10px; align-items: center; margin-left: 30px; }
+.ck-by { font-size: .75rem; color: var(--muted); }
+.save-msg { min-height: 1.2em; font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.note-form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-bottom: 12px; }
+.notes, .files, .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: .85rem; }
+.note-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.files li { overflow-wrap: anywhere; }
+.log { white-space: pre-wrap; font-size: .75rem; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 20rem; overflow: auto; }
+details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margin-top: 12px; }
+
+/* ---- Phones: calendar shows coloured bars instead of names ---- */
+@media (max-width: 560px) {
+  .chip { font-size: 0; height: 6px; padding: 0; }
+  .day { min-height: 2.6rem; }
+  .prow { grid-template-columns: 4.5rem 1fr; }
+  .prow-txt { grid-column: 1 / -1; text-align: left; }
+}
+/* ---- Printing / Save as PDF ---- */
+@media print {
+  :root { --bg: #fff; --panel: #fff; color-scheme: light; }
+  body { font-size: 12px; }
+  .noprint { display: none !important; }
+  .card { break-inside: avoid; border-color: #ccc; }
+  .wrap { padding: 0; }
+  .dim { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar i, .pv-bar i { transition: width .4s ease-out; } }
+
+/* ---- Approval, bid details, requirements, company fit, Tender File ---- */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.callout { border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; border: 1px solid var(--line); }
+.callout.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.callout.bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.callout.wait { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.approve-form { display: flex; flex-direction: column; gap: 8px; max-width: 40rem; margin-bottom: 8px; }
+.approve-form label, .field label { font-size: .8rem; color: var(--muted); }
+.approve-form textarea, .field input, .field select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 100%; }
+.field input:disabled, .field select:disabled { opacity: 1; color: var(--fg); background: transparent; border-style: dashed; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.k-compulsory { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.k-functionality { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.k-points { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.k-submission { color: var(--muted); background: var(--grid); }
+.k-specification { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.k-contract { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.req-kind { font-size: .9rem; margin: 18px 0 2px; display: flex; gap: 8px; align-items: center; }
+.req-groups > .req-kind:first-child { margin-top: 4px; }
+.reqs .ck-label .pill { margin-right: 4px; }
+.fit-table tr.hl td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.fit-checks { margin: 6px 0 0; padding-left: 18px; font-size: .8rem; }
+.fit-checks .r-pass { color: var(--ok); }
+.fit-checks .r-fail { color: var(--bad); }
+.fit-checks .r-unknown { color: var(--muted); }
+details summary { cursor: pointer; color: var(--accent); font-size: .8rem; }
+.company-head { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin-bottom: 12px; }
+table.kv th { width: 14rem; color: var(--muted); font-weight: 500; }
+@media print {
+  .card { padding: 10px 0; border: none; border-bottom: 1px solid #ccc; border-radius: 0; }
+  details > summary { display: none; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ---- Short tender lists: tender, then days left and closing date together on the right ---- */
+#clerk-table th.num, #clerk-table td:nth-child(2), #clerk-table td:nth-child(3),
+.short-list th.num, .short-list td.num { text-align: right; white-space: nowrap; }
+#clerk-table td:nth-child(2), #clerk-table th:nth-child(2), .short-list .days { width: 6rem; }
+#clerk-table td:nth-child(3), #clerk-table th:nth-child(3), .short-list .closes { width: 8rem; padding-right: 0; }
+
+/* ---- Warning shown before a change that cancels the approval ---- */
+.hint { display: inline-block; font-size: .72rem; color: var(--warn); font-weight: 600; margin-left: 4px; }
+.field .hint { margin-left: 0; }
+.field.check { flex-direction: row; align-items: center; gap: 8px; font-size: .85rem; color: var(--fg); align-self: end; padding-bottom: 8px; cursor: pointer; }
+.field.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ---- At risk / next actions (clerk home page, dashboard "Needs attention") ---- */
+.bad-text { color: var(--bad); }
+.actions-list, .attn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.action, .attn { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center;
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--bg); }
+.action.is-risk, .attn.is-risk, .next-step.is-risk { border-left: 4px solid var(--bad); }
+.action-main, .attn-main { flex: 1 1 22rem; min-width: 0; }
+.action-tender { font-weight: 600; }
+.action-text { margin: 4px 0 0; font-size: 1rem; }
+.action-why, .attn-why { margin: 6px 0 0; font-size: .82rem; color: var(--muted); }
+.action-side, .attn-side { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+ol.actions-list { counter-reset: step; }
+ol.actions-list > li::before { counter-increment: step; content: counter(step); font: 600 .8rem var(--sans); color: var(--muted); margin-right: 4px; }
+.next-step p { margin: 0; } .next-step p + p { margin-top: 6px; }
+.next-step .lbl { font-size: .75rem; color: var(--muted); margin-right: 6px; }
+
+</style>
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href=".././">Tender Tracker</a>
+  
+  <a href="../dashboard/" aria-current="page">Dashboard</a>
+  <a href="../tenders/">Tenders</a>
+  <a href="../review/">Review</a>
+  <a href="../companies/">Companies</a>
+  <a href="../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+  <header>
+    <h1>Tender Tracker</h1>
+    <p class="lede" id="takeaway"></p>
+    <div class="meta"><span id="asof"></span><button class="btn noprint" type="button" id="print">Print / save as PDF</button></div>
+  </header>
+
+  <section class="kpis">
+    <div class="card kpi"><div class="big" id="k-up"></div><div class="lbl">Upcoming tenders</div></div>
+    <div class="card kpi"><div class="big" id="k-sub"></div><div class="lbl">Submitted</div></div>
+    <div class="card kpi"><div class="big" id="k-st"></div><div class="lbl">In progress (steps ticked or work files found)</div></div>
+    <div class="card kpi"><div class="big" id="k-pe"></div><div class="lbl">Not started</div></div>
+    <div class="card kpi bad"><div class="big" id="k-risk"></div><div class="lbl">At risk (behind for the days left)</div></div>
+  </section>
+
+  <section class="card attention" id="attention">
+    <h2>Needs attention</h2>
+    <p class="note">At risk = not far enough along for the days left (e.g. closes in 3 days but under 75% done), a compulsory briefing in the next 2 days not attended, or still needing approval close to closing.</p>
+    <div id="attn"></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Where the tenders stand</h2>
+      <p class="note">Upcoming tenders only. Submitted = the clerk ticked "Submitted". In progress = checklist steps ticked or work files found in a clerk's folder.</p>
+      <div class="chart" id="stage-chart"></div>
+    </section>
+    <section class="card">
+      <h2>Progress by clerk</h2>
+      <p class="note">Average checklist completion over each clerk's upcoming tenders. Shared tenders count for both clerks.</p>
+      <div class="prog" id="prog"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Tenders by clerk</h2>
+    <p class="note">Click a name, or pick one from the list, to see the tenders that clerk is working on.</p>
+    <div class="picker noprint">
+      <div id="names" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <label for="clerk-select">Clerk</label>
+      <select id="clerk-select"></select>
+    </div>
+    <p id="clerk-sum"></p>
+    <div class="scroll"><table id="clerk-table"><thead><tr>
+      <th>Tender</th><th class="num">Days left</th><th class="num">Closes</th>
+    </tr></thead><tbody></tbody></table></div>
+    <p class="empty" id="clerk-empty" hidden></p>
+  </section>
+
+  <section class="card">
+    <h2>Deadline calendar</h2>
+    <p class="note">Closing dates and briefing sessions, one month at a time. Use the arrows to move between months (the number in brackets is how many dates are in the months before / after). Picking a clerk above fades everyone else's dates.</p>
+    <div class="legend">
+      <span><i class="sw u-red"></i>Closes within 7 days</span>
+      <span><i class="sw u-amber"></i>8 to 14 days</span>
+      <span><i class="sw u-green"></i>15 days or more</span>
+      <span><i class="sw" style="border:1.5px solid var(--bad)"></i>Compulsory briefing</span>
+      <span><i class="sw" style="border:2px solid var(--fg)"></i>Today</span>
+    </div>
+    <div class="cal-bar" id="cal-bar">
+      <button class="btn" type="button" id="cal-prev" aria-label="Previous month">‹</button>
+      <div class="cal-head"><h3 id="cal-title" aria-live="polite"></h3><span class="muted small" id="cal-count"></span></div>
+      <button class="btn" type="button" id="cal-next" aria-label="Next month">›</button>
+      <button class="btn small" type="button" id="cal-today">This month</button>
+    </div>
+    <div class="months" id="cal"></div>
+    <ul class="agenda" id="agenda"></ul>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Tenders by province</h2>
+      <p class="note">Where each upcoming tender is issued. National covers National Treasury and the National Department of Health. Green is the share submitted or in progress.</p>
+      <div class="prov" id="prov"></div>
+    </section>
+    <section class="card">
+      <h2>Things to know</h2>
+      <p class="note">Live checks on the checklists and gaps found in the files. Red items need action before a deadline.</p>
+      <ul class="warn" id="warn"></ul>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>All upcoming tenders</h2>
+    <p class="note">Sorted by closing date. Source rows are in the NASH tender schedule.</p>
+    <div class="scroll"><table id="all-table"><thead><tr>
+      <th>Tender</th><th>Department</th><th>Clerk(s)</th><th>Closes</th><th>Days left</th><th>Stage</th><th>Checklist</th><th>Province</th><th>Briefing</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+</div>
+
+<script id="data" type="application/json">{"today": "2026-10-24", "generated": "2026-10-23T13:48:27", "schedule_file": "NASH TENDER SCHEDULE 14.10.2026.xlsx", "tenders": [{"id": "836ac8ece9", "tender": "MN201-2026 (8/3/54-2026)", "tender_no": "TENDER 8/3/54-2026 / (MN201-2026)", "department": "Bergrivier - WC Local Municipality", "description": "Supply and delivery of photocopy paper for the bergrivier municipal stores from 1 july 2027 until 30 june 2030", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-10-26", "days_left": 2, "urgency": "red", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Western Cape", "stage": "In progress", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 2, "evidence": ["Thembeka/BERGRIVIER MUNICIPALITY PRICING SCHEDULE.xlsx", "Thembeka/T 8.3.54-2026 MN201-2026 (1).pdf"], "note": "Pricing schedule: brand filled (Mondi Rotatrim), prices blank", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 717", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 18, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 2 days but only 0% done (should be 75%+ by now)"}, {"id": "2e85c38fc5", "tender": "RT33-2026", "tender_no": "RT33-2026", "department": "National Treasury", "description": "The appointment of a service provider for the supply, delivery, installation, commissioning and maintenance of dna equipment, systems, accessories and related consumables for a period of 36 month", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-26", "days_left": 2, "urgency": "red", "briefing": "", "briefing_date": "2026-10-07", "briefing_compulsory": "No", "province": "National", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 5, "evidence": ["Norel/RT33-2026/9. RT33-2026 Pricing Schedule.xlsx", "Norel/RT33-2026/RT33 A.pdf", "Norel/RT33-2026/20261019120736315.pdf", "Norel/RT33-2026/20261019120921838.pdf", "Norel/RT33-2026/20261019121257125.pdf"], "note": "Pricing schedule: 44 items, brands on 17, no prices entered yet", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 718", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 26, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 2 days but only 0% done (should be 75%+ by now)"}, {"id": "611ca9940c", "tender": "HEDP004/26/27 RE-ADVERT", "tender_no": "HEDP004/26/27 RE-ADVERT", "department": "Limpopo - Health", "description": "Supply and delivery of dorsal slit medical male circumcision (mmc) packs for a period of thirty-six (36) months in the department of health: limpopo province", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-28", "days_left": 4, "urgency": "red", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Limpopo", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 719", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 4 days but only 0% done (should be 50%+ by now)"}, {"id": "e0d06a9350", "tender": "HP10-2028BIO", "tender_no": "HP10-2028BIO", "department": "Health", "description": "Hp10-2028bio: supply and delivery of small biological preparations to the department of health for the period 01 january 2028 to 31 december 2030", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-11-02", "days_left": 9, "urgency": "amber", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "National", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 712", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 9 days but only 0% done (should be 25%+ by now)"}, {"id": "92aff51daa", "tender": "EDU 05/26 NW", "tender_no": "EDU 05/26 NW", "department": "North West - Department of Education and Sport Development", "description": "Request for the establishment of a panel of service provider(s) for the supply, packaging, distribution and catalogue management of caps-compliant fet physical sciences teaching and learning support materials (ltsm) for grades 10-12 for a period of three (3) years: 2026/2027 to 2028/2029", "clerks": "Abby & Norel", "clerk_list": ["Abby", "Norel"], "closing": "2026-11-03", "days_left": 10, "urgency": "amber", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "North West", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 720", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 10 days but only 0% done (should be 25%+ by now)"}, {"id": "23431d1bdc", "tender": "EDU 06/26 NW", "tender_no": "EDU 06/26 NW", "department": "North West - Department of Education and Sport Development", "description": "Request for the establishment of panel of service(s) for the supply, packaging and distribution and catalogue management of caps compliant get technology teaching and learning support material (ltsm) for grade 8-9 for a period of three (3) a contractual duration of three (3) year 2026/2027 to 2028/2029", "clerks": "Abby & Norel", "clerk_list": ["Abby", "Norel"], "closing": "2026-11-04", "days_left": 11, "urgency": "amber", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "North West", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 721", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "at_risk", "risk_reason": "Closes in 11 days but only 0% done (should be 25%+ by now)"}, {"id": "90a5cd3c17", "tender": "GSDM38/2026", "tender_no": "GSDM38/2026", "department": "Gert Sibande District Municipality", "description": "Appointment of panel of service providers for supply and delivery of cleaning material for gsdm as an when it is required for the period of 36 months", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-09", "days_left": 16, "urgency": "green", "briefing": "", "briefing_date": "2026-10-23", "briefing_compulsory": "Yes", "province": "Mpumalanga", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 1, "evidence": ["Thembeka/GSDM38-2026  APPOINTMENT OF A PANEL OF SERVICE PROVIDERS FOR SUPPLY AND DELIVERY OF CLEANING MATERIAL FOR GSDM.pdf"], "note": "Compulsory briefing 23 Oct at GSDM Level 2 Auditorium", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 722", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 26, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}, {"id": "eb0756b534", "tender": "HD 02-2026/27", "tender_no": "HD 02-2026/27", "department": "City of Tshwane", "description": "Tender for the supply, delivery and off-loading of consumables for the city of tshwane health department as and when required over a three (3) year period.", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-10", "days_left": 17, "urgency": "green", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Gauteng", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 713", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}, {"id": "aabdc54f79", "tender": "W11573", "tender_no": "W11573", "department": "Water and Sanitation", "description": "Appointment of a service provider to supply and delivery of groceries (food products) and cleaning consumables to the department of water and sanitation- roodeplaat training center (rtc) as and when required for a period of thirty-six months (01 july 2027 to 30 june 2030)", "clerks": "Thembeka", "clerk_list": ["Thembeka"], "closing": "2026-11-12", "days_left": 19, "urgency": "green", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Gauteng", "stage": "In progress", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 1, "evidence": ["Thembeka/Bid Documents for W11573.pdf"], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 723", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 27, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Make the Go / No-Go decision", "kind": "do"}, "risk": "on_track", "risk_reason": ""}], "recent": [{"id": "9391c35244", "tender": "RT42-1-2025", "tender_no": "RT42-1-2025", "department": "National Treasury", "description": "Supply and delivery of bandages and dressings to the state for a period ending 31 october 2030", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-23", "days_left": -1, "urgency": "closed", "briefing": "", "briefing_date": "2026-10-02", "briefing_compulsory": "No", "province": "National", "stage": "In progress", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 5, "evidence": ["Norel/20261019114803936.pdf", "Norel/20261019114932307.pdf", "Norel/20261019115051275.pdf", "Norel/20261019115152698.pdf", "Norel/20261019115302936.pdf"], "note": "5 scanned bid documents in Norel's folder (not labelled with a tender number)", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 716", "schedule_status": "", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 22, "req_from_doc": true, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8e3905688e", "tender": "WCGHCC0059-2026", "tender_no": "WCGHCC0059-2026", "department": "Western Cape - Health", "description": "Bid for the supply and delivery of disposable syringes, needles, and accessories to all hospitals/institutions under the control of the department of health and wellness, western cape provincial government for a three-year period", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 711", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8512f77f43", "tender": "GT/GDH/032/2026", "tender_no": "GT/GDH/032/2026", "department": "Gauteng - Health", "description": "Appointment of service providers for the leasing of office space, warehouse, emergency communication centre (ecc), ems base station, and information repository for the emergency medical services (ems) head office & wellness clinic for a period of three (3) years", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 714", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "aaad2290f4", "tender": "GT/GDH/021/2026", "tender_no": "GT/GDH/021/2026", "department": "Gauteng - Health", "description": "The supply and delivery of radiology consumables for a period of three years.", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-16", "days_left": -8, "urgency": "closed", "briefing": "", "briefing_date": "2026-10-02", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 715", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "27c7d1bc5f", "tender": "CONTRACT NO SCM 14 OF 26-27", "tender_no": "CONTRACT NO SCM 14 OF 26-27", "department": "Msunduzi Local Municipality", "description": "Appointment of a panel of pharmaceutical wholesalers/distributors to supply and deliver medication and surgical items to msunduzi municipality", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-09", "days_left": -15, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 710", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "03c820997a", "tender": "SCMU3-2627-0070-SHE", "tender_no": "SCMU3-2627-0070-SHE", "department": "Eastern Cape - Health", "description": "Establishment of a panel of service providers for clinicians’ residential accommodation at or tambo district (nelson mandela academic hospital, mthatha regional hospital, mthatha pharmaceutical depot) for the period thirty-six (36) months.", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-07", "days_left": -17, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 708", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "f7f4e4f473", "tender": "NKTVET/2026/09/01", "tender_no": "NKTVET/2026/09/01", "department": "Nkangala TVET College", "description": "Request for porposal from a prospective suppliers for a panel of service providers to supply and deliver a (ltsm) learner and teaching support material (stationery, protective clothing, students devices, textbooks, consumables and workshop machines, computers for computer labs and students) to nkangala tvet college for the period of five (05) years.", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-06", "days_left": -18, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 709", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "5389950478", "tender": "HP02-2025AI/02", "tender_no": "HP02-2025AI/02", "department": "Health", "description": "Hp02-2025ai/02: supply and delivery of anti-infective medicines (antibiotics, antifungal, antiprotozoal and antiviral agents) to the department of health for the period ending 30 september 2028", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 705", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "61bf43dae5", "tender": "HP03-2026CHM/01", "tender_no": "HP03-2026CHM/01", "department": "Health", "description": "Hp03-2026chm/01: supply and delivery of contraceptives and hormone modulating agents to the department of health for the period ending 30 september 2029", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-18", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 706", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "e1cb4ed083", "tender": "WCGHGC0326/2/2026", "tender_no": "WCGHGC0326/2/2026", "department": "Western Cape - Health", "description": "Supply and delivery of toilet paper, plastic bags, plastic aprons, cleaning materials and equipment to all hospitals/institutions under the control of western cape government department of health and wellness for a five (5) year period", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-05", "days_left": -19, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 707", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "e32c33215a", "tender": "SMT02-26-27", "tender_no": "SMT02-26-27", "department": "Swellendam Municipality", "description": "Rental of office space to swellendam municipality for a three-year period", "clerks": "", "clerk_list": [], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 702", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "6778db0834", "tender": "RFI RT9-2027", "tender_no": "RFI RT9-2027", "department": "National Treasury", "description": "Rfi rt9-2027: supply and delivery of specialised products for infant feed, complete enteral feeds for paediatrics and adults, enteral feed supplements, other nutritional supplements and tube feeding systems to the state", "clerks": "Norel & Abby", "clerk_list": ["Norel", "Abby"], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 703", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "b4dc6a6402", "tender": "RT284-2027", "tender_no": "RT284-2027", "department": "National Treasury", "description": "Rt284-2027: supply and delivery of hypodermic syringes, needles and bloodletting devices and related items to the state for the period of sixty (60) months", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-02", "days_left": -22, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-11", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 704", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "936bee1875", "tender": "TREA/028/26/MP Re-advertisemen", "tender_no": "TREA/028/26/MP Re-advertisemen", "department": "Mpumalanga - Provincial Treasury", "description": "Appointment of a service provider for audit software for internal audit for a period of 60 months (05 years) with an option to extend", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-10-01", "days_left": -23, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 701", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "90cb159cc8", "tender": "RFP08/26", "tender_no": "RFP08/26", "department": "Kwa-Zulu Natal - Ithala Development Finance Corporation", "description": "Appointment of a service provider to render 24-hour security guarding services at isithebe industrial estate in kwa-zulu natal for a period of 36 months.", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-03", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 696", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "d762777fe2", "tender": "CED 12/2026-2027", "tender_no": "CED 12/2026-2027", "department": "Cederberg Municipality", "description": "Supply and delivery of tissue paper products to cederberg municipality for a multi-year period ending 30 june 2029", "clerks": "", "clerk_list": [], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 697", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "90a3d4eab0", "tender": "CED 13/2026-2027", "tender_no": "CED 13/2026-2027", "department": "Cederberg Municipality", "description": "Supply, delivery and off-loading of cleaning materials and equipment to cederberg municipality for a multi-year period ending 30 june 2029", "clerks": "", "clerk_list": [], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 698", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "8425f967c9", "tender": "E3390CXMWP", "tender_no": "E3390CXMWP", "department": "ESKOM", "description": "Rendering equipped and fully resourced mobile health clinic services in 9 provinces", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 699", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "6a5e987175", "tender": "RE - A042 - 2025/26", "tender_no": "RE - A042 - 2025/26", "department": "Newcastle Local Municipality", "description": "Re- advertisement: provision of external security services to newcastle municipality for a period of 36 months", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-30", "days_left": -24, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-16", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 700", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "ea6250247c", "tender": "DTPS-B014/26/27", "tender_no": "DTPS-B014/26/27", "department": "Dr Nkosazana Dlamini Zuma Local Municipality", "description": "Provision of office space for tourism office for a period of 3 years", "clerks": "", "clerk_list": [], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-09", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 693", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "7563c7cef1", "tender": "RFP10/26", "tender_no": "RFP10/26", "department": "Kwa-Zulu Natal - Ithala Development Finance Corporation", "description": "Appointment of a service provider to render 24 hour security guarding services at madadeni industrial estate in kwazulu-natal for a period of 36 months", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-03", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 694", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "1cdb8a1e8d", "tender": "Q13-2026", "tender_no": "Q13-2026", "department": "Overberg District Municipality", "description": "Security, patrol, and access control services at die dam and uilenkraalsmond resorts sites of the overberg district municipality for the period 01 – 31 october 2026", "clerks": "", "clerk_list": [], "closing": "2026-09-29", "days_left": -25, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 695", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "ad8d96ace0", "tender": "NDOH 08-2026/2027", "tender_no": "NDOH 08-2026/2027", "department": "Health", "description": "Appointment of a service provider to render physical security services to the national department of health offices (dr ab xuma) and the medical bureau for occupational diseases and the compensation commissioner for occupational diseases (mbod/ccod) for a period of 03 years.", "clerks": "Thembeka & Hlengiwe", "clerk_list": ["Thembeka", "Hlengiwe"], "closing": "2026-09-28", "days_left": -26, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 692", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "afa4ac6eb7", "tender": "WCGHGC0358/2/2026", "tender_no": "WCGHGC0358/2/2026", "department": "Western Cape - Health", "description": "Supply and delivery of laundry chemicals and liquid dosing pumps to all hospitals and institutions of the western cape department of health and wellness for a five (5) year period", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-25", "days_left": -29, "urgency": "closed", "briefing": "", "briefing_date": "2026-09-17", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 14, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 687", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}, {"id": "968384e8b3", "tender": "GT/GDH/020/2026", "tender_no": "GT/GDH/020/2026", "department": "Gauteng - Health", "description": "The supply, delivery, installation, commissioning and maintenance of general and specialised radiography imaging equipment at various gauteng health institutions for a period of three years", "clerks": "Abby", "clerk_list": ["Abby"], "closing": "2026-09-25", "days_left": -29, "urgency": "closed", "briefing": "", "briefing_date": "", "briefing_compulsory": "No", "province": "Unknown", "stage": "Not started", "done": 0, "total": 13, "pct": 0, "briefing_done": false, "last_update": null, "files": 0, "evidence": [], "note": "", "source": "NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet 'Medical and Consumables', row 691", "schedule_status": "Closed – no outcome recorded", "outcome": "", "outcome_by": "", "approval": "", "approval_by": "", "approval_at": "", "approval_comment": "", "req_done": 0, "req_total": 6, "req_from_doc": false, "company": "", "bid_value": "", "next": {"text": "Record the outcome (won, lost ...)", "kind": "do"}, "risk": "", "risk_reason": ""}], "clerks": [{"name": "Abby", "total": 5, "submitted": 0, "in_progress": 1, "not_started": 4, "progress": 0, "next_deadline": "2026-10-26"}, {"name": "Norel", "total": 4, "submitted": 0, "in_progress": 1, "not_started": 3, "progress": 0, "next_deadline": "2026-10-26"}, {"name": "Thembeka", "total": 4, "submitted": 0, "in_progress": 3, "not_started": 1, "progress": 0, "next_deadline": "2026-10-26"}], "events": [{"date": "2026-10-26", "type": "closing", "tender": "MN201-2026 (8/3/54-2026)", "id": "836ac8ece9", "clerks": "Thembeka", "flag": "red"}, {"date": "2026-10-26", "type": "closing", "tender": "RT33-2026", "id": "2e85c38fc5", "clerks": "Norel & Abby", "flag": "red"}, {"date": "2026-10-28", "type": "closing", "tender": "HEDP004/26/27 RE-ADVERT", "id": "611ca9940c", "clerks": "Norel & Abby", "flag": "red"}, {"date": "2026-11-02", "type": "closing", "tender": "HP10-2028BIO", "id": "e0d06a9350", "clerks": "Abby", "flag": "amber"}, {"date": "2026-11-03", "type": "closing", "tender": "EDU 05/26 NW", "id": "92aff51daa", "clerks": "Abby & Norel", "flag": "amber"}, {"date": "2026-11-04", "type": "closing", "tender": "EDU 06/26 NW", "id": "23431d1bdc", "clerks": "Abby & Norel", "flag": "amber"}, {"date": "2026-11-09", "type": "closing", "tender": "GSDM38/2026", "id": "90a5cd3c17", "clerks": "Thembeka", "flag": "green"}, {"date": "2026-11-10", "type": "closing", "tender": "HD 02-2026/27", "id": "eb0756b534", "clerks": "Thembeka", "flag": "green"}, {"date": "2026-11-12", "type": "closing", "tender": "W11573", "id": "aabdc54f79", "clerks": "Thembeka", "flag": "green"}], "warnings": [{"level": "high", "id": "836ac8ece9", "text": "MN201-2026 (8/3/54-2026) closes in 2 days and is not marked submitted (0% of checklist done)."}, {"level": "high", "id": "2e85c38fc5", "text": "RT33-2026 closes in 2 days and is not marked submitted (0% of checklist done)."}, {"level": "med", "text": "5 of 9 upcoming tenders are not started (nothing ticked and no work files in a folder)."}, {"level": "med", "text": "25 tenders closed in the last 30 days have no outcome recorded yet."}, {"level": "high", "text": "RT33-2026 pricing schedule has no prices entered (0 of 44 items). Closes 26 Oct."}, {"level": "high", "text": "Bergrivier MN201-2026 pricing schedule has no prices entered (0 of 2 items). Closes 26 Oct."}, {"level": "med", "text": "Norel's 5 scanned PDFs have no tender number on them; assumed to be for RT42-1-2025."}, {"level": "low", "text": "16 past tenders have no closing date; 3 have a wrong-looking year."}, {"level": "low", "text": "712 past tenders have no outcome (won / lost / submitted) recorded in the schedule."}], "links": true, "base": "../", "built": "23 Oct 13:48"}</script>
+<script>
+/*
+  dashboard/app.js - draws every part of the Tender Tracker page.
+
+  The data comes from the <script id="data"> block that step4_build_dashboard.py
+  (offline file) or server.py (website) writes into the page:
+  D.tenders, D.clerks, D.events, D.warnings, D.today, D.built.
+  D.links is true on the website: tender names then open the tender's checklist.
+
+  Stages: Submitted / In progress / Not started (rules in tracker.py).
+
+  Sections (each is one function below):
+    drawAttention  "Needs attention": at-risk tenders and approvals waiting
+    drawStage      bar chart: all upcoming / submitted / in progress / not started
+    drawProgress   progress bar per clerk
+    drawClerk      clerk buttons, dropdown and that clerk's tender table
+    drawCalendar   one month grid (with Previous/Next) + that month's dates
+    drawProvinces  tenders per province
+    drawWarnings   "Things to know"
+    fillTable      shared: fills a table body with tender rows
+*/
+(() => {
+  // ---- Data and small helpers ---------------------------------------------
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Dates are handled in UTC so a date never shifts by a day because of the time zone.
+  const day = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const fDay = (d) => `${WD[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`;
+  // true if tender/event t belongs to clerk `name` (no name = everyone)
+  const has = (t, name) => !name || String(t.clerks).split(' & ').includes(name);
+  const pill = (text, cls) => el('span', 'pill ' + cls, text);
+  const today = day(D.today);
+  let picked = null;          // the clerk currently selected (null = all clerks)
+
+  // ---- Totals for the summary cards ---------------------------------------
+  const T = D.tenders;
+  const tot = {
+    up: T.length,
+    sub: T.filter((t) => t.stage === 'Submitted').length,
+    st: T.filter((t) => t.stage === 'In progress').length,
+    pe: T.filter((t) => t.stage === 'Not started').length,
+    d7: T.filter((t) => Number(t.days_left) <= 7).length,
+    risk: T.filter((t) => t.risk === 'at_risk').length,
+    wait: T.filter((t) => t.approval === 'requested').length,
+  };
+  const stageCls = (s) => (s === 'Submitted' ? 'st-sub' : s === 'In progress' ? 'st-prog' : 'st-none');
+  // A tender's name: a link to its checklist on the website, plain text offline.
+  // Link to a tender's page. D.base is set only in the read-only demo (plain files, e.g. "../").
+  const tenderLink = (id) => (D.base ? `${D.base}tender/${id}/` : `/tender/${id}`);
+  const tenderName = (t) => {
+    if (!D.links || !t.id) return document.createTextNode(t.tender);
+    const a = el('a', null, t.tender); a.href = tenderLink(t.id); return a;
+  };
+
+  // ---- Header line and the four summary cards -------------------------------
+  $('#k-up').textContent = tot.up; $('#k-sub').textContent = tot.sub; $('#k-st').textContent = tot.st; $('#k-pe').textContent = tot.pe; $('#k-risk').textContent = tot.risk;
+  const tk = $('#takeaway');
+  tk.append(el('b', null, String(tot.risk)), ' of ', el('b', null, String(tot.up)), ' upcoming tenders are at risk',
+    tot.wait ? ', ' : '. ', ...(tot.wait ? [el('b', null, String(tot.wait)), ' waiting for approval. '] : []),
+    el('b', null, String(tot.d7)), ' close within 7 days; ', el('b', null, String(tot.sub)), ' submitted.');
+  $('#asof').textContent = `Figures as of ${fDay(today)} ${today.getUTCFullYear()} · tender data read ${D.built}`;
+  $('#print').addEventListener('click', () => window.print());
+
+  // ---- Started vs pending chart ---------------------------------------------
+  // Drawn as SVG at the card's current width; redrawn when the window resizes.
+  function drawStage() {
+    const box = $('#stage-chart'); box.replaceChildren();
+    const rows = [{ k: 'All upcoming', n: tot.up, c: 'var(--fg)' }, { k: 'Submitted', n: tot.sub, c: 'var(--ok)' },
+      { k: 'In progress', n: tot.st, c: 'var(--accent)' }, { k: 'Not started', n: tot.pe, c: 'var(--mutedbar)' }];
+    const W = Math.max(260, box.clientWidth), H = 220, top = 28, bottom = 30;
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    const band = W / rows.length, bw = Math.min(72, band * 0.6);
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', '100%'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Bar chart of upcoming, submitted, in progress and not started tenders');
+    const mk = (tag, attrs, text) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; };
+    svg.append(mk('line', { x1: 0, x2: W, y1: H - bottom, y2: H - bottom, stroke: 'var(--line)' }));
+    const tip = el('div', 'tip'); tip.hidden = true;
+    rows.forEach((r, i) => {
+      const h = (H - top - bottom) * r.n / max, x = band * i + (band - bw) / 2, y = H - bottom - h;
+      const rect = mk('rect', { x, y, width: bw, height: Math.max(h, 0), rx: 4 }); rect.style.fill = r.c;
+      rect.addEventListener('mousemove', (ev) => {
+        tip.hidden = false; tip.replaceChildren(el('small', null, r.k), el('div', null, r.n + ' tenders'));
+        const b = box.getBoundingClientRect();
+        tip.style.left = Math.min(ev.clientX - b.left + 12, box.clientWidth - tip.offsetWidth - 4) + 'px';
+        tip.style.top = Math.max(0, ev.clientY - b.top - 36) + 'px';
+      });
+      rect.addEventListener('mouseleave', () => { tip.hidden = true; });
+      svg.append(rect);
+      const v = mk('text', { x: band * i + band / 2, y: y - 8, 'text-anchor': 'middle' }, r.n); v.style.cssText = 'fill:var(--fg);font:1.25rem var(--serif)';
+      const l = mk('text', { x: band * i + band / 2, y: H - 10, 'text-anchor': 'middle' }, r.k); l.style.cssText = 'fill:var(--muted);font-size:.8rem';
+      svg.append(v, l);
+    });
+    box.append(svg, tip);
+  }
+
+  // ---- Progress by clerk -----------------------------------------------------
+  // Green bar = average checklist completion over that clerk's upcoming tenders.
+  function drawProgress() {
+    const box = $('#prog'); box.replaceChildren();
+    D.clerks.forEach((c) => {
+      const row = el('div', 'prow');
+      row.append(el('div', 'prow-name', c.name));
+      const bar = el('div', 'bar'); bar.setAttribute('role', 'progressbar'); bar.setAttribute('aria-valuenow', c.progress);
+      bar.setAttribute('aria-valuemin', 0); bar.setAttribute('aria-valuemax', 100); bar.setAttribute('aria-label', c.name + ' progress');
+      const fill = el('i'); fill.style.width = c.progress + '%'; bar.append(fill); row.append(bar);
+      const txt = el('div', 'prow-txt');
+      if (Number(c.total) === 0) txt.textContent = 'No upcoming tenders';
+      else txt.append(el('b', null, c.progress + '%'), ` · ${c.submitted} of ${c.total} submitted`);
+      row.append(txt); box.append(row);
+    });
+  }
+
+  // ---- Tender tables --------------------------------------------------------
+  // cols = which fields to show, in order. Days left and stage become coloured pills.
+  function fillTable(tbody, rows, cols) {
+    tbody.replaceChildren();
+    rows.forEach((t) => {
+      const tr = el('tr');
+      cols.forEach((c) => {
+        const td = el('td');
+        if (c === 'tender') td.append(tenderName(t));
+        else if (c === 'days_left') td.append(pill(String(t.days_left), 'u-' + t.urgency));
+        else if (c === 'stage') td.append(pill(t.stage, stageCls(t.stage)));
+        else if (c === 'pct') {
+          const bar = el('span', 'mini'); const f = el('i'); f.style.width = t.pct + '%'; bar.append(f);
+          td.append(bar, ` ${t.done}/${t.total}`); td.style.whiteSpace = 'nowrap';
+        }
+        else if (c === 'closing' || c === 'briefing') { td.textContent = t[c] ? fDay(day(t[c])) : ''; td.style.whiteSpace = 'nowrap'; }
+        else td.textContent = t[c] == null ? '' : String(t[c]);
+        if (c === 'description') td.className = 'desc';
+        if (c === 'briefing' && t.briefing_compulsory === 'Yes') td.append(' ', pill('Compulsory', 'u-red'));
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+  }
+
+  // ---- Calendar ---------------------------------------------------------------
+  // ONE month at a time. "Previous" / "Next" move a month; "This month" jumps back.
+  // The list under the grid shows only that month's dates.
+  // Events of clerks other than the selected one are faded (class 'dim').
+  const firstOf = (d) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  const addMonths = (d, n) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
+  const monthName = (d) => `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  let calMonth = firstOf(today);  // the month on screen
+
+  // How many events fall before / after the month on screen (shown on the buttons).
+  function eventsOutside(m) {
+    const start = iso(m), next = iso(addMonths(m, 1));
+    return { before: D.events.filter((e) => e.date < start).length,
+             after: D.events.filter((e) => e.date >= next).length };
+  }
+
+  function drawCalendar() {
+    const m = calMonth, box = $('#cal'); box.replaceChildren();
+    const start = iso(m), next = iso(addMonths(m, 1));
+    const ev = D.events.filter((e) => e.date >= start && e.date < next);
+    const byDate = {};
+    ev.forEach((e) => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+    // Month bar: title + buttons
+    const out = eventsOutside(m);
+    $('#cal-title').textContent = monthName(m);
+    $('#cal-prev').textContent = '‹ ' + MONTHS[addMonths(m, -1).getUTCMonth()].slice(0, 3) + (out.before ? ` (${out.before})` : '');
+    $('#cal-next').textContent = MONTHS[addMonths(m, 1).getUTCMonth()].slice(0, 3) + (out.after ? ` (${out.after})` : '') + ' ›';
+    $('#cal-today').disabled = +m === +firstOf(today);
+    $('#cal-count').textContent = ev.length
+      ? `${ev.filter((e) => e.type !== 'briefing').length} closing, ${ev.filter((e) => e.type === 'briefing').length} briefing this month`
+      : 'Nothing this month';
+
+    const grid = el('div', 'cal');
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach((w) => grid.append(el('div', 'wd', w)));
+    const lead = (m.getUTCDay() + 6) % 7;
+    for (let i = 0; i < lead; i++) grid.append(el('div', 'day blank'));
+    const days = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 0)).getUTCDate();
+    for (let d = 1; d <= days; d++) {
+      const dt = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), d));
+      const cell = el('div', 'day');
+      if (dt.getUTCDay() === 0 || dt.getUTCDay() === 6) cell.classList.add('wkend');
+      if (+dt === +today) cell.classList.add('today');
+      if (dt < today) cell.classList.add('past');
+      cell.append(el('span', 'dn', String(d)));
+      (byDate[iso(dt)] || []).forEach((e) => {
+        const brief = e.type === 'briefing';
+        const chip = el('div', 'chip ' + (brief ? 'brief' + (e.flag === 'compulsory' ? ' comp' : '') : 'u-' + e.flag), (brief ? 'Brief: ' : '') + e.tender);
+        chip.title = (brief ? 'Briefing: ' : 'Closes: ') + e.tender + ' (' + e.clerks + ')';
+        if (picked && !has(e, picked)) chip.classList.add('dim');
+        cell.append(chip);
+      });
+      grid.append(cell);
+    }
+    box.append(grid);
+
+    const ag = $('#agenda'); ag.replaceChildren();
+    const keys = Object.keys(byDate).sort();
+    if (!keys.length) ag.append(el('li', 'empty', `No closing dates or briefings in ${monthName(m)}.`));
+    keys.forEach((k) => {
+      const li = el('li', 'ag');
+      li.append(el('div', 'ag-date', fDay(day(k))));
+      const items = el('div', 'ag-items');
+      byDate[k].forEach((e) => {
+        const brief = e.type === 'briefing';
+        const it = el('div', 'ag-item');
+        it.append(pill(brief ? (e.flag === 'compulsory' ? 'Compulsory briefing' : 'Briefing') : 'Closes', brief ? (e.flag === 'compulsory' ? 'u-red' : 's-pending') : 'u-' + e.flag));
+        it.append(el('span', null, e.tender), el('small', null, e.clerks));
+        if (picked && !has(e, picked)) it.classList.add('dim');
+        items.append(it);
+      });
+      li.append(items); ag.append(li);
+    });
+  }
+  function moveMonth(n) { calMonth = n === 0 ? firstOf(today) : addMonths(calMonth, n); drawCalendar(); }
+  $('#cal-prev').addEventListener('click', () => moveMonth(-1));
+  $('#cal-next').addEventListener('click', () => moveMonth(1));
+  $('#cal-today').addEventListener('click', () => moveMonth(0));
+  // Arrow keys move months when the calendar bar has focus.
+  $('#cal-bar').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') moveMonth(-1);
+    if (e.key === 'ArrowRight') moveMonth(1);
+  });
+
+  // ---- Tenders by province ----------------------------------------------------
+  // Bar length = number of tenders; green part = started, grey part = pending.
+  function drawProvinces() {
+    const m = {};
+    T.forEach((t) => { const r = m[t.province] || (m[t.province] = { p: t.province, n: 0, s: 0 }); r.n++; if (t.stage !== 'Not started') r.s++; });
+    const rows = Object.values(m).sort((a, b) => b.n - a.n || a.p.localeCompare(b.p));
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    const box = $('#prov'); box.replaceChildren();
+    rows.forEach((r) => {
+      const row = el('div', 'pv');
+      row.append(el('div', null, r.p));
+      const bar = el('div', 'pv-bar'); bar.style.width = (100 * r.n / max) + '%';
+      const s = el('i'); s.style.width = (100 * r.s / r.n) + '%'; s.style.background = 'var(--ok)';
+      const p = el('i'); p.style.width = (100 * (r.n - r.s) / r.n) + '%'; p.style.background = 'var(--mutedbar)';
+      bar.append(s, p);
+      const wrap = el('div'); wrap.append(bar);
+      row.append(wrap, el('div', 'pv-n', String(r.n)));
+      box.append(row);
+    });
+  }
+
+  // ---- Needs attention: at-risk tenders and approvals waiting, most urgent first --
+  const daysText = (n) => (Number(n) === 0 ? 'Closes today' : Number(n) === 1 ? '1 day left' : `${n} days left`);
+  function drawAttention() {
+    const box = $('#attn'); box.replaceChildren();
+    const risky = T.filter((t) => t.risk === 'at_risk').sort((a, b) => a.days_left - b.days_left);
+    const waiting = T.filter((t) => t.approval === 'requested' && t.risk !== 'at_risk');
+    if (!risky.length && !waiting.length) { box.append(el('p', 'empty', 'Nothing needs attention right now. Everything is on track.')); return; }
+    const list = el('ul', 'attn-list');
+    risky.forEach((t) => {
+      const li = el('li', 'attn is-risk');
+      const main = el('div', 'attn-main'); main.append(tenderName(t), el('span', 'muted small', ' · ' + (t.clerks || 'no clerk')));
+      main.append(el('div', 'attn-why', t.risk_reason));
+      const side = el('div', 'attn-side'); side.append(pill(daysText(t.days_left), 'u-' + t.urgency), el('span', 'muted small', fDay(day(t.closing))));
+      li.append(main, side); list.append(li);
+    });
+    waiting.forEach((t) => {
+      const li = el('li', 'attn');
+      const main = el('div', 'attn-main'); main.append(tenderName(t), el('span', 'muted small', ' · ' + (t.clerks || 'no clerk')));
+      main.append(el('div', 'attn-why', 'Waiting for your approval (asked by ' + t.approval_by + ')'));
+      const side = el('div', 'attn-side'); side.append(pill(daysText(t.days_left), 'u-' + t.urgency), el('span', 'muted small', fDay(day(t.closing))));
+      li.append(main, side); list.append(li);
+    });
+    box.append(list);
+  }
+
+  // ---- Things to know ---------------------------------------------------------
+  function drawWarnings() {
+    $('#warn').replaceChildren(...D.warnings.map((w) => {
+      const li = el('li'); const txt = el('span', null, w.text + ' ');
+      if (D.links && w.id) { const a = el('a', null, 'Open'); a.href = tenderLink(w.id); txt.append(a); }
+      li.append(el('span', 'dot l-' + w.level), txt); return li;
+    }));
+  }
+
+  // ---- Clerk picker -------------------------------------------------------------
+  // Clicking a name (or choosing in the dropdown) selects that clerk; clicking it again shows everyone.
+  const select = $('#clerk-select');
+  select.append(new Option('All clerks', ''), ...D.clerks.map((c) => new Option(c.name, c.name)));
+  select.addEventListener('change', () => setClerk(select.value || null));
+  $('#names').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-name]');
+    if (b) setClerk(picked === b.dataset.name ? null : b.dataset.name);
+  });
+
+  function drawClerk() {
+    const names = $('#names');
+    names.replaceChildren(...D.clerks.map((c) => {
+      const b = el('button', 'name'); b.type = 'button'; b.dataset.name = c.name;
+      b.setAttribute('aria-pressed', String(picked === c.name));
+      b.append(el('span', null, c.name), el('span', 'count', String(c.total)));
+      return b;
+    }));
+    select.value = picked || '';
+    const sum = $('#clerk-sum'); sum.replaceChildren();
+    const c = D.clerks.find((x) => x.name === picked);
+    if (c && Number(c.total) > 0) {
+      sum.append(c.name + ' is on ', el('b', null, String(c.total)), ' upcoming tenders: ', el('b', null, String(c.submitted)), ' submitted, ',
+        el('b', null, String(c.in_progress)), ' in progress, ', el('b', null, String(c.not_started)), ' not started. Next deadline ',
+        el('b', null, fDay(day(c.next_deadline))), '.');
+    } else if (!c) sum.textContent = 'Showing every clerk. Pick a name to narrow the list.';
+    const rows = T.filter((t) => has(t, picked));
+    // Short list: tender, days left, closing date (last). Clerk, checklist, requirements and
+    // description are only on the tender's own page.
+    fillTable($('#clerk-table tbody'), rows, ['tender', 'days_left', 'closing']);
+    $('#clerk-table').hidden = rows.length === 0;
+    const empty = $('#clerk-empty'); empty.hidden = rows.length > 0;
+    if (!rows.length) empty.textContent = picked + ' has no upcoming tenders in the schedule.';
+  }
+
+  // Selecting a clerk redraws only the parts that depend on it.
+  function setClerk(name) { picked = name; drawClerk(); drawCalendar(); }
+
+  // ---- First draw ----------------------------------------------------------------
+  drawAttention(); drawStage(); drawProgress(); drawClerk(); drawCalendar(); drawProvinces(); drawWarnings();
+  fillTable($('#all-table tbody'), T, ['tender', 'department', 'clerks', 'closing', 'days_left', 'stage', 'pct', 'province', 'briefing']);
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawStage, 150); });
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,787 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>Companies · Tender Tracker</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href=".././">Tender Tracker</a>
+  
+  <a href="../dashboard/">Dashboard</a>
+  <a href="../tenders/">Tenders</a>
+  <a href="../review/">Review</a>
+  <a href="../companies/" aria-current="page">Companies</a>
+  <a href="../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <h1>Companies</h1>
+  <p class="lede">What each company has and where it operates. The fit score on every tender compares these
+    profiles with the tender's requirements. Leave a field blank if you don't know; it shows as "unknown".</p>
+</header>
+
+
+
+<section class="card company" data-company="Sharp Eye">
+  <div class="company-head">
+    <h2>Sharp Eye</h2>
+    <span class="muted small">221 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Sharp_Eye">On the CSD</label>
+      <select id="1-csd-Sharp_Eye" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Sharp_Eye">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Sharp_Eye" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Sharp_Eye">COID letter of good standing</label>
+      <select id="3-coid-Sharp_Eye" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Sharp_Eye">SABS/SANS-approved products</label>
+      <select id="4-sabs-Sharp_Eye" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Sharp_Eye">B-BBEE level</label>
+      <select id="b-Sharp_Eye" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Sharp_Eye">Years of similar supply</label>
+      <input id="y-Sharp_Eye" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Sharp_Eye">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Sharp_Eye" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Sharp_Eye">What it supplies</label>
+      <input id="pr-Sharp_Eye" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Sharp Eye</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="SA Wellness">
+  <div class="company-head">
+    <h2>SA Wellness</h2>
+    <span class="muted small">155 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-SA_Wellness">On the CSD</label>
+      <select id="1-csd-SA_Wellness" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-SA_Wellness">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-SA_Wellness" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-SA_Wellness">COID letter of good standing</label>
+      <select id="3-coid-SA_Wellness" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-SA_Wellness">SABS/SANS-approved products</label>
+      <select id="4-sabs-SA_Wellness" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-SA_Wellness">B-BBEE level</label>
+      <select id="b-SA_Wellness" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-SA_Wellness">Years of similar supply</label>
+      <input id="y-SA_Wellness" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-SA_Wellness">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-SA_Wellness" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-SA_Wellness">What it supplies</label>
+      <input id="pr-SA_Wellness" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save SA Wellness</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Promed Tech">
+  <div class="company-head">
+    <h2>Promed Tech</h2>
+    <span class="muted small">14 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Promed_Tech">On the CSD</label>
+      <select id="1-csd-Promed_Tech" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Promed_Tech">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Promed_Tech" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Promed_Tech">COID letter of good standing</label>
+      <select id="3-coid-Promed_Tech" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Promed_Tech">SABS/SANS-approved products</label>
+      <select id="4-sabs-Promed_Tech" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Promed_Tech">B-BBEE level</label>
+      <select id="b-Promed_Tech" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Promed_Tech">Years of similar supply</label>
+      <input id="y-Promed_Tech" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Promed_Tech">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Promed_Tech" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Promed_Tech">What it supplies</label>
+      <input id="pr-Promed_Tech" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Promed Tech</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Promed">
+  <div class="company-head">
+    <h2>Promed</h2>
+    <span class="muted small">124 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Promed">On the CSD</label>
+      <select id="1-csd-Promed" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Promed">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Promed" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Promed">COID letter of good standing</label>
+      <select id="3-coid-Promed" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Promed">SABS/SANS-approved products</label>
+      <select id="4-sabs-Promed" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Promed">B-BBEE level</label>
+      <select id="b-Promed" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Promed">Years of similar supply</label>
+      <input id="y-Promed" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Promed">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Promed" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Promed">What it supplies</label>
+      <input id="pr-Promed" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Promed</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Sebenzani">
+  <div class="company-head">
+    <h2>Sebenzani</h2>
+    <span class="muted small">102 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Sebenzani">On the CSD</label>
+      <select id="1-csd-Sebenzani" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Sebenzani">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Sebenzani" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Sebenzani">COID letter of good standing</label>
+      <select id="3-coid-Sebenzani" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Sebenzani">SABS/SANS-approved products</label>
+      <select id="4-sabs-Sebenzani" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Sebenzani">B-BBEE level</label>
+      <select id="b-Sebenzani" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Sebenzani">Years of similar supply</label>
+      <input id="y-Sebenzani" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Sebenzani">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Sebenzani" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Sebenzani">What it supplies</label>
+      <input id="pr-Sebenzani" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Sebenzani</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Access Medical">
+  <div class="company-head">
+    <h2>Access Medical</h2>
+    <span class="muted small">68 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Access_Medical">On the CSD</label>
+      <select id="1-csd-Access_Medical" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Access_Medical">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Access_Medical" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Access_Medical">COID letter of good standing</label>
+      <select id="3-coid-Access_Medical" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Access_Medical">SABS/SANS-approved products</label>
+      <select id="4-sabs-Access_Medical" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Access_Medical">B-BBEE level</label>
+      <select id="b-Access_Medical" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Access_Medical">Years of similar supply</label>
+      <input id="y-Access_Medical" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Access_Medical">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Access_Medical" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Access_Medical">What it supplies</label>
+      <input id="pr-Access_Medical" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Access Medical</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="New Age Technologies">
+  <div class="company-head">
+    <h2>New Age Technologies</h2>
+    <span class="muted small">23 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-New_Age_Technologies">On the CSD</label>
+      <select id="1-csd-New_Age_Technologies" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-New_Age_Technologies">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-New_Age_Technologies" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-New_Age_Technologies">COID letter of good standing</label>
+      <select id="3-coid-New_Age_Technologies" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-New_Age_Technologies">SABS/SANS-approved products</label>
+      <select id="4-sabs-New_Age_Technologies" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-New_Age_Technologies">B-BBEE level</label>
+      <select id="b-New_Age_Technologies" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-New_Age_Technologies">Years of similar supply</label>
+      <input id="y-New_Age_Technologies" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-New_Age_Technologies">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-New_Age_Technologies" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-New_Age_Technologies">What it supplies</label>
+      <input id="pr-New_Age_Technologies" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save New Age Technologies</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Rocket Freight">
+  <div class="company-head">
+    <h2>Rocket Freight</h2>
+    <span class="muted small">10 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Rocket_Freight">On the CSD</label>
+      <select id="1-csd-Rocket_Freight" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Rocket_Freight">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Rocket_Freight" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Rocket_Freight">COID letter of good standing</label>
+      <select id="3-coid-Rocket_Freight" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Rocket_Freight">SABS/SANS-approved products</label>
+      <select id="4-sabs-Rocket_Freight" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Rocket_Freight">B-BBEE level</label>
+      <select id="b-Rocket_Freight" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Rocket_Freight">Years of similar supply</label>
+      <input id="y-Rocket_Freight" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Rocket_Freight">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Rocket_Freight" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Rocket_Freight">What it supplies</label>
+      <input id="pr-Rocket_Freight" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Rocket Freight</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Pharmacare">
+  <div class="company-head">
+    <h2>Pharmacare</h2>
+    <span class="muted small">8 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Pharmacare">On the CSD</label>
+      <select id="1-csd-Pharmacare" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Pharmacare">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Pharmacare" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Pharmacare">COID letter of good standing</label>
+      <select id="3-coid-Pharmacare" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Pharmacare">SABS/SANS-approved products</label>
+      <select id="4-sabs-Pharmacare" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Pharmacare">B-BBEE level</label>
+      <select id="b-Pharmacare" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Pharmacare">Years of similar supply</label>
+      <input id="y-Pharmacare" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Pharmacare">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Pharmacare" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Pharmacare">What it supplies</label>
+      <input id="pr-Pharmacare" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Pharmacare</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Infotech Pro">
+  <div class="company-head">
+    <h2>Infotech Pro</h2>
+    <span class="muted small">4 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Infotech_Pro">On the CSD</label>
+      <select id="1-csd-Infotech_Pro" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Infotech_Pro">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Infotech_Pro" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Infotech_Pro">COID letter of good standing</label>
+      <select id="3-coid-Infotech_Pro" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Infotech_Pro">SABS/SANS-approved products</label>
+      <select id="4-sabs-Infotech_Pro" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Infotech_Pro">B-BBEE level</label>
+      <select id="b-Infotech_Pro" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Infotech_Pro">Years of similar supply</label>
+      <input id="y-Infotech_Pro" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Infotech_Pro">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Infotech_Pro" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Infotech_Pro">What it supplies</label>
+      <input id="pr-Infotech_Pro" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Infotech Pro</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+<section class="card company" data-company="Liamed">
+  <div class="company-head">
+    <h2>Liamed</h2>
+    <span class="muted small">1 past bids in the schedule</span>
+  </div>
+  <div class="details">
+    
+    <div class="field">
+      <label for="1-csd-Liamed">On the CSD</label>
+      <select id="1-csd-Liamed" data-key="csd">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="2-tax-Liamed">Tax compliant (TCS PIN)</label>
+      <select id="2-tax-Liamed" data-key="tax">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="3-coid-Liamed">COID letter of good standing</label>
+      <select id="3-coid-Liamed" data-key="coid">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="4-sabs-Liamed">SABS/SANS-approved products</label>
+      <select id="4-sabs-Liamed" data-key="sabs">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label for="b-Liamed">B-BBEE level</label>
+      <select id="b-Liamed" data-key="bbbee_level">
+        <option value="">Unknown</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>Non-compliant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="y-Liamed">Years of similar supply</label>
+      <input id="y-Liamed" data-key="years_experience" inputmode="decimal" value="">
+    </div>
+    <div class="field wide">
+      <label for="a-Liamed">Where it is located (towns, districts, provinces - comma separated)</label>
+      <input id="a-Liamed" data-key="areas" placeholder="e.g. Ermelo, Gert Sibande, Mpumalanga" value="">
+    </div>
+    <div class="field wide">
+      <label for="pr-Liamed">What it supplies</label>
+      <input id="pr-Liamed" data-key="products" placeholder="e.g. medical consumables, cleaning chemicals" value="">
+    </div>
+  </div>
+  <p class="noprint"><button class="btn primary" type="button" data-save-company>Save Liamed</button>
+    <span class="save-msg" role="status" aria-live="polite"></span></p>
+</section>
+
+
+</div>
+<script src="../static/tracker.js"></script>
+<script>Tracker.companies();</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>Activity · Tender Tracker</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href=".././">Tender Tracker</a>
+  
+  <a href="../dashboard/">Dashboard</a>
+  <a href="../tenders/">Tenders</a>
+  <a href="../review/">Review</a>
+  <a href="../companies/">Companies</a>
+  <a href="../activity/" aria-current="page">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <h1>Activity</h1>
+  <p class="lede">Every tick, note and outcome, newest first, plus the daily data refresh.</p>
+</header>
+
+<section class="card">
+  <h2>Data refresh</h2>
+  <p class="note">The tender schedule and clerk folders are re-read every day at 06:00.
+    Press the button after saving a new schedule if you don't want to wait.</p>
+  <p>Last successful refresh: <b id="last-ok">23 Oct 13:48</b>
+    <span id="run-state" class="muted"></span></p>
+  
+  <details><summary>Recent refresh log</summary><pre class="log">No runs yet.</pre></details>
+</section>
+
+<section class="card">
+  <h2>Copies for the Tender File</h2>
+  <p class="note">Keep a copy outside the server. The backup holds every tick, note, approval and company profile.</p>
+  <p><a class="btn" href="../export/register.csv">Download register (Excel / CSV)</a>
+     </p>
+</section>
+
+<section class="card">
+  <h2>Recent changes</h2>
+  <p class="empty">Nothing yet.</p>
+</section>
+
+<section class="card">
+  <h2>Users</h2>
+  <p class="note">Add users or reset a PIN on the server with <code>python manage_users.py</code>.</p>
+  <ul class="files"></ul>
+</section>
+
+</div>
+<script src="../static/tracker.js"></script>
+<script>Tracker.refreshButton();</script>
+</body>
+</html>

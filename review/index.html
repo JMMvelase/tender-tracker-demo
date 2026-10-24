@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>Review · Tender Tracker</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href=".././">Tender Tracker</a>
+  
+  <a href="../dashboard/">Dashboard</a>
+  <a href="../tenders/">Tenders</a>
+  <a href="../review/" aria-current="page">Review</a>
+  <a href="../companies/">Companies</a>
+  <a href="../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <h1>Review</h1>
+  <p class="lede">Tenders the clerks have asked you to approve. Open one to read the checklist, requirements,
+    bid details and company fit, then <b>Approve</b> or <b>Send back</b> with a comment.</p>
+</header>
+
+<section class="card">
+  <h2>Waiting for approval</h2>
+  
+  <p class="empty">Nothing is waiting for approval.</p>
+  
+</section>
+
+<section class="card">
+  <h2>Recent decisions</h2>
+  
+  <p class="empty">No decisions yet.</p>
+  
+</section>
+
+</div>
+<script src="../static/tracker.js"></script>
+
+</body>
+</html>

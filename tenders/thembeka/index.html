@@ -1,0 +1,171 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>Tenders · Tender Tracker</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href="../.././">Tender Tracker</a>
+  
+  <a href="../../dashboard/">Dashboard</a>
+  <a href="../../tenders/" aria-current="page">Tenders</a>
+  <a href="../../review/">Review</a>
+  <a href="../../companies/">Companies</a>
+  <a href="../../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <h1>Thembeka&#39;s tenders</h1>
+  <p class="lede">
+    
+    <b>4</b> upcoming, <b>1</b> closing within 7 days.
+    Open a tender to tick off what has been done.
+  </p>
+  <p class="noprint"><a class="btn" href="../../export/register.csv">Download register (Excel / CSV)</a></p>
+  
+  <div class="picker noprint">
+    <a class="name" href="../../tenders/">Everyone</a>
+    
+    <a class="name" href="../../tenders/abby/">Abby</a>
+    
+    <a class="name" href="../../tenders/norel/">Norel</a>
+    
+    <a class="name" href="../../tenders/thembeka/" aria-pressed="true">Thembeka</a>
+    
+  </div>
+  
+</header>
+
+<section class="card">
+  <h2>Upcoming</h2>
+  <p class="note">Sorted by closing date. Open a tender to see its clerk, checklist, requirements and what it is.</p>
+  
+  <div class="scroll"><table class="short-list">
+    <thead><tr><th>Tender</th><th>Stage</th><th>Approval</th><th>Last update</th><th class="num days">Days left</th><th class="num closes">Closes</th></tr></thead>
+    <tbody>
+    
+      <tr>
+        <td><a href="../../tender/836ac8ece9/">MN201-2026 (8/3/54-2026)</a>
+           <span class="pill u-red" title="Closes in 2 days but only 0% done (should be 75%+ by now)">At risk</span></td>
+        <td><span class="pill st-prog">In progress</span></td>
+        <td>
+<span class="pill st-none">Not asked</span></td>
+        <td class="muted nowrap">—</td>
+        <td class="num days"><span class="pill u-red">2</span></td>
+        <td class="num closes">Mon 26 Oct</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/90a5cd3c17/">GSDM38/2026</a>
+          </td>
+        <td><span class="pill st-prog">In progress</span></td>
+        <td>
+<span class="pill st-none">Not asked</span></td>
+        <td class="muted nowrap">—</td>
+        <td class="num days"><span class="pill u-green">16</span></td>
+        <td class="num closes">Mon 9 Nov</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/eb0756b534/">HD 02-2026/27</a>
+          </td>
+        <td><span class="pill st-none">Not started</span></td>
+        <td>
+<span class="pill st-none">Not asked</span></td>
+        <td class="muted nowrap">—</td>
+        <td class="num days"><span class="pill u-green">17</span></td>
+        <td class="num closes">Tue 10 Nov</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/aabdc54f79/">W11573</a>
+          </td>
+        <td><span class="pill st-prog">In progress</span></td>
+        <td>
+<span class="pill st-none">Not asked</span></td>
+        <td class="muted nowrap">—</td>
+        <td class="num days"><span class="pill u-green">19</span></td>
+        <td class="num closes">Thu 12 Nov</td>
+      </tr>
+    
+    </tbody>
+  </table></div>
+  
+</section>
+
+<section class="card">
+  <h2>Recently closed: record the outcome</h2>
+  <p class="note">Tenders that closed in the last 30 days. Pick what happened; it saves straight away.</p>
+  
+  <div class="scroll"><table class="short-list">
+    <thead><tr><th>Tender</th><th>Outcome</th><th>Recorded by</th><th class="num closes">Closed</th></tr></thead>
+    <tbody>
+    
+      <tr>
+        <td><a href="../../tender/90cb159cc8/">RFP08/26</a></td>
+        <td>
+          <select class="outcome" data-tender="90cb159cc8" aria-label="Outcome for RFP08/26">
+            <option value="">— not recorded —</option>
+            <option>Submitted - awaiting result</option><option>Won</option><option>Lost</option><option>Not submitted</option><option>Cancelled by client</option>
+          </select>
+        </td>
+        <td class="muted" data-by="90cb159cc8"></td>
+        <td class="num closes">Wed 30 Sep</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/6a5e987175/">RE - A042 - 2025/26</a></td>
+        <td>
+          <select class="outcome" data-tender="6a5e987175" aria-label="Outcome for RE - A042 - 2025/26">
+            <option value="">— not recorded —</option>
+            <option>Submitted - awaiting result</option><option>Won</option><option>Lost</option><option>Not submitted</option><option>Cancelled by client</option>
+          </select>
+        </td>
+        <td class="muted" data-by="6a5e987175"></td>
+        <td class="num closes">Wed 30 Sep</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/7563c7cef1/">RFP10/26</a></td>
+        <td>
+          <select class="outcome" data-tender="7563c7cef1" aria-label="Outcome for RFP10/26">
+            <option value="">— not recorded —</option>
+            <option>Submitted - awaiting result</option><option>Won</option><option>Lost</option><option>Not submitted</option><option>Cancelled by client</option>
+          </select>
+        </td>
+        <td class="muted" data-by="7563c7cef1"></td>
+        <td class="num closes">Tue 29 Sep</td>
+      </tr>
+    
+      <tr>
+        <td><a href="../../tender/ad8d96ace0/">NDOH 08-2026/2027</a></td>
+        <td>
+          <select class="outcome" data-tender="ad8d96ace0" aria-label="Outcome for NDOH 08-2026/2027">
+            <option value="">— not recorded —</option>
+            <option>Submitted - awaiting result</option><option>Won</option><option>Lost</option><option>Not submitted</option><option>Cancelled by client</option>
+          </select>
+        </td>
+        <td class="muted" data-by="ad8d96ace0"></td>
+        <td class="num closes">Mon 28 Sep</td>
+      </tr>
+    
+    </tbody>
+  </table></div>
+  
+</section>
+
+</div>
+<script src="../../static/tracker.js"></script>
+<script>Tracker.outcomeSelects();</script>
+</body>
+</html>

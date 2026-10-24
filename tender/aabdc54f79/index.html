@@ -1,0 +1,903 @@
+<!doctype html>
+<!-- base.html - shared frame for every website page except the dashboard (dashboard/template.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="demo">
+<title>W11573 · Tender Tracker</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<nav class="topnav noprint" aria-label="Main">
+  <a class="brand" href="../.././">Tender Tracker</a>
+  
+  <a href="../../dashboard/">Dashboard</a>
+  <a href="../../tenders/" aria-current="page">Tenders</a>
+  <a href="../../review/">Review</a>
+  <a href="../../companies/">Companies</a>
+  <a href="../../activity/">Activity</a>
+  <span class="spacer"></span>
+  
+  <span class="pill u-amber">Read-only demo · nothing is saved</span>
+  
+</nav>
+<div class="wrap">
+
+<header>
+  <p class="crumb noprint"><a href="../../tenders/">← Tenders</a></p>
+  <h1>W11573</h1>
+  <p class="lede">Water and Sanitation · Appointment of a service provider to supply and delivery of groceries (food products) and cleaning consumables to the department of water and sanitation- roodeplaat training center (rtc) as and when required for a period of thirty-six months (01 july 2027 to 30 june 2030)</p>
+  <p class="noprint actions">
+    <a class="btn" href="../../tender/aabdc54f79/print/">Tender File (print / PDF)</a>
+    <span class="pill st-none">Read-only view</span>
+  </p>
+</header>
+
+<section class="facts card">
+  <div><span class="lbl">Closes</span><b>Thu 12 Nov</b>
+    <span class="pill u-green">19 days left</span></div>
+  <div><span class="lbl">Briefing</span>None listed</div>
+  <div><span class="lbl">Clerk(s)</span><b>Thembeka</b></div>
+  <div><span class="lbl">Province</span><b>Gauteng</b></div>
+  <div><span class="lbl">Stage</span><span id="stage" class="pill st-prog">In progress</span></div>
+  <div><span class="lbl">Approval</span>
+<span class="pill st-none">Not asked</span></div>
+</section>
+
+
+<section class="card next-step">
+  
+  <p><span class="lbl">Next step</span> <b>Make the Go / No-Go decision</b></p>
+</section>
+
+
+
+<section class="card approval" id="approval" data-tender="aabdc54f79">
+  <h2>Management approval</h2>
+  <p class="note">SOP 5.4: management approves the bid and signs off pricing before it is packaged and submitted.</p>
+  
+  <p class="muted">Not asked for yet.</p>
+  
+
+  
+
+  
+  <p class="save-msg" id="approval-msg" role="status" aria-live="polite"></p>
+
+  
+</section>
+
+
+
+
+<div class="grid wide-left">
+  
+  <section class="card">
+    <h2>Checklist</h2>
+    <p class="note">What the clerk has ticked, with who and when. Steps follow the SOP for Tenderers.</p>
+    <div class="ck-progress">
+      <div class="bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="pct-bar" style="width: 0%"></i></div>
+      <span id="pct-txt"><b>0%</b> · 0 of 13 steps</span>
+    </div>
+    <ul class="checklist" id="checklist" data-tender="aabdc54f79">
+      
+      
+      
+      
+      <li class="ck" data-item="go_no_go" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Go / No-Go decision made
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="docs_saved" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Tender documents downloaded and saved in my folder
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="docs_read" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Documents read: scope, specifications, conditions, returnables
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="clarifications" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Clarification questions sent to the client
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="company_docs" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Company documents attached (CSD, tax clearance, B-BBEE, registrations)
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="samples" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Samples requested / prepared
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="technical" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Technical proposal done (specifications, brands, methodology)
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="pricing" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Pricing schedule completed
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="review" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Internal review done by the Tender Manager
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="approval" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Management approved the submission and signed off pricing
+            
+            <span class="pill st-none">Ticked by a manager's approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="packaged" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">All forms signed, labelled and packaged as the client asks
+            
+            <span class="pill st-none">After approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="submitted" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Submitted before the closing date and time
+            
+            <span class="pill st-none">After approval</span></span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+      
+      
+      
+      <li class="ck" data-item="proof" data-state="">
+        <label class="ck-main">
+          <input type="checkbox" disabled>
+          <span class="ck-label">Proof / receipt of submission saved
+            
+            </span>
+        </label>
+        <span class="ck-side">
+          
+          <span class="ck-by"></span>
+        </span>
+      </li>
+      
+    </ul>
+    <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <div class="stack">
+    
+    <section class="card">
+      <h2>Bid details</h2>
+      <p class="note">Filled in by the clerk.</p>
+      <div class="details" id="details" data-tender="aabdc54f79">
+        
+        
+        
+        <div class="field">
+          <label for="f-company">Bidding company</label>
+          
+          <select id="f-company" data-field="company" disabled>
+            <option value="">—</option>
+            <option>Access Medical</option><option>Sharp Eye</option><option>SA Wellness</option><option>Promed</option><option>Sebenzani</option><option>New Age Technologies</option><option>Promed Tech</option><option>Rocket Freight</option><option>Pharmacare</option><option>Infotech Pro</option><option>Liamed</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="company"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-bid_value">Total bid price (R, incl. VAT)</label>
+          
+          <input id="f-bid_value" data-field="bid_value" type="text" maxlength="200"
+                 inputmode="decimal" placeholder="e.g. 125000.00"
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="bid_value"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-bbbee_claimed">B-BBEE level claimed</label>
+          
+          <select id="f-bbbee_claimed" data-field="bbbee_claimed" disabled>
+            <option value="">—</option>
+            <option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Level 4</option><option>Level 5</option><option>Level 6</option><option>Level 7</option><option>Level 8</option><option>Non-compliant</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="bbbee_claimed"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-method">How it will be submitted</label>
+          
+          <select id="f-method" data-field="method" disabled>
+            <option value="">—</option>
+            <option>Tender box (hand delivery)</option><option>Courier</option><option>Online portal / e-tender</option><option>Email</option>
+          </select>
+          
+          
+          <span class="muted small" data-by-field="method"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-receipt">Submission receipt / reference no.</label>
+          
+          <input id="f-receipt" data-field="receipt" type="text" maxlength="200"
+                 
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="receipt"></span>
+        </div>
+        
+        
+        
+        <div class="field">
+          <label for="f-contact">Client contact person</label>
+          
+          <input id="f-contact" data-field="contact" type="text" maxlength="200"
+                 
+                 value="" disabled>
+          
+          
+          <span class="muted small" data-by-field="contact"></span>
+        </div>
+        
+      </div>
+    </section>
+
+    
+
+    <section class="card">
+      <h2>Notes</h2>
+      
+      <ul class="notes" id="notes">
+        
+      </ul>
+      <p class="muted">No notes yet.</p>
+    </section>
+  </div>
+</div>
+
+
+<section class="card">
+  <h2>Tender requirements</h2>
+  <p class="note">
+    Read from this tender's document. 
+    
+  </p>
+  <p class="muted" id="req-txt"><b>0</b> of 27 met</p>
+  <div class="req-groups">
+  
+  <h3 class="req-kind"><span class="pill k-compulsory">Compulsory</span> <span class="muted small">9</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:coa" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Phase 1: valid certified Certificate of Acceptability for the food premises (Regulation 3 of R638, issued by the local authority) <span class="muted small">· Terms of reference 7, Phase 1, p. 29</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:csd" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Registered on the CSD - print-out attached (11-digit MAAA number) <span class="muted small">· Administrative compliance 6, p. 28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:tax" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Tax compliant with SARS (checked on the CSD) <span class="muted small">· Administrative compliance 6, p. 28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:sbd_forms" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">SBD 1, SBD 3.1/3.2 pricing, SBD 4 and SBD 6.1 completed in full and signed; dates within the advert period; info must match the CSD report <span class="muted small">· Administrative compliance 6, p. 28; SBD directive</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:cipc" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Active CIPC registration - copy of the CIPC certificate <span class="muted small">· Administrative compliance 6, p. 28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:authority" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Certificate of authority for signatory + copy of that person&#39;s ID; board resolution (template provided) <span class="muted small">· Administrative compliance 6, p. 28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:gcc" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">General Conditions of Contract signed <span class="muted small">· Administrative compliance 6, p. 28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:jv" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">If a JV/consortium: notarial agreement naming the lead partner, % of each member, consolidated B-BBEE certificate <span class="muted small">· Administrative compliance 6, p. 28; conditions 8</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:proposal" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Detailed bid proposal in line with the specifications <span class="muted small">· SBD directive, Annexure I</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-functionality">Functionality</span> <span class="muted small">6</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:threshold" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Must score at least 70% in functionality to go on to price <span class="muted small">· Terms of reference 7, Phase 2, p. 29-33</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:experience" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Experience supplying groceries to institutions, hotels, schools etc. (0 yrs = 0 ... above 4 yrs = full marks) with signed reference letters on the client&#39;s letterhead. Weight about 30 (not readable in the scan - confirm) <span class="muted small">· Phase 2, p. 30</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:finance" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">20 pts: bank or credit letter showing a facility / funds of R300 000 or more for full marks <span class="muted small">· Phase 2, p. 30</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:transport" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">30 pts: own or outsourced vehicles of at least 2 tons, roadworthy, refrigerated for meat; photos, registration/licence discs, letter from the transport company <span class="muted small">· Phase 2, p. 30-31</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:storage" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">10 pts: premises with dry storage, segregation, fridges/freezers; full marks need the Certificate of Acceptability plus hygiene, pest-control and temperature records <span class="muted small">· Phase 2, p. 31-32</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:method" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">10 pts: project plan with timelines, delivery times for weekly/monthly/emergency orders, CVs of delivery staff <span class="muted small">· Phase 2, p. 32-33</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-points">Points</span> <span class="muted small">4</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:price_points" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">80/20 system: 80 price + 20 specific goals (Annexure A in the same document says 90/10 - confirm with the department) <span class="muted small">· Phase 3, p. 33</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:goals_ownership" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Women 5, people with disability 5, youth (35 and under) 5 - pro-rata to ownership, proven by the full CSD report <span class="muted small">· Phase 3 specific goals, p. 34</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:locality" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">2 pts: enterprise located in the province (Gauteng) <span class="muted small">· Phase 3 specific goals, p. 34-35</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:bbbee" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">3 pts: B-BBEE level 1-2 QSE or EME - valid certificate or sworn affidavit <span class="muted small">· Phase 3 specific goals, p. 34</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-specification">Specification</span> <span class="muted small">2</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:spec_items" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Quote every line: groceries (sauces, spices, cereals, beverages, baking, snacks, preserved food), fresh and frozen meat (halaal items), fruit, vegetables and cleaning consumables; brand or equivalent stated <span class="muted small">· Specification 2.2, p. 2-25</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:food_safety" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Food handlers in PPE and compliant with R638; clean, food-grade transport; perishables packed against contamination <span class="muted small">· Standard minimum requirements 5, p. 26-28</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-contract">Contract terms</span> <span class="muted small">4</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:delivery" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Deliver within 36 hours of an order, 18 hours for emergencies; weekly or as needed <span class="muted small">· General conditions, p. 26</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:firm_prices" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Firm prices for the first 12 months, then CPI increases only - request in writing 60 days before the anniversary <span class="muted small">· General conditions, p. 25</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:negotiate" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">The department may negotiate prices with the preferred bidder or not award at all <span class="muted small">· Conditions 8, p. 36</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:validity" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Offer valid for 180 days after closing <span class="muted small">· SBD 3.1</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  <h3 class="req-kind"><span class="pill k-submission">Submission</span> <span class="muted small">2</span></h3>
+  <ul class="checklist reqs" data-tender="aabdc54f79">
+    
+    
+    <li class="ck" data-item="req:etender" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Submit ONLINE on the National Treasury eTender portal only (no email, no tender box) by 12 Nov 2026 11:00 <span class="muted small">· Cover page</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+    
+    <li class="ck" data-item="req:briefing" data-state="">
+      <label class="ck-main">
+        <input type="checkbox" disabled title="Only  can change this">
+        <span class="ck-label">Briefing session is non-compulsory (hybrid) <span class="muted small">· Cover page; compliance 6</span></span>
+      </label>
+      <span class="ck-side"><span class="ck-by"></span></span>
+    </li>
+    
+  </ul>
+  
+  </div>
+  <p class="save-msg" id="req-msg" role="status" aria-live="polite"></p>
+</section>
+
+
+<section class="card" id="fit">
+  <h2>Which company fits this tender</h2>
+  <p class="note">Score = 60% company profile against the requirements + 40% past bids on similar tenders.
+    Profiles are kept on the <a href="../../companies/">Companies</a> page; "unknown" means the profile doesn't say yet.
+    The schedule lists <b>Sebenzani</b> for this tender (highlighted).</p>
+  
+<div class="scroll"><table class="fit-table">
+  <thead><tr><th>Company</th><th>Score</th><th>Verdict</th><th>Profile checks</th><th>Past bids</th></tr></thead>
+  <tbody>
+  
+  <tr>
+    <td><b>Access Medical</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 21%"></i></span> 21</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>68 bids, 1 similar
+      <details><summary>Most similar</summary><ul class="fit-checks">
+        <li>34713-5M (2026-05-29, 27% match): Panel: Supply and delivery of various food products for a period of thirty-six months</li></ul></details>
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Sharp Eye</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>221 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>SA Wellness</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>155 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Promed</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>124 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr class="hl">
+    <td><b>Sebenzani</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>102 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>New Age Technologies</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 12%"></i></span> 12</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>23 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Promed Tech</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 8%"></i></span> 8</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>14 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Rocket Freight</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 6%"></i></span> 6</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>10 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Pharmacare</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 5%"></i></span> 5</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>8 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Infotech Pro</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 2%"></i></span> 2</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>4 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td><b>Liamed</b></td>
+    <td class="nowrap"><span class="mini"><i style="width: 1%"></i></span> 1</td>
+    <td><span class="pill st-prog">Profile needed</span></td>
+    <td>
+      
+      
+      0 pass · 0 fail · 6 unknown
+      <details><summary>Details</summary><ul class="fit-checks">
+        <li class="r-unknown">Profile doesn&#39;t say if it has CSD registration</li><li class="r-unknown">Profile doesn&#39;t say if it has tax compliance</li><li class="r-unknown">Years of experience not in the profile</li><li class="r-unknown">B-BBEE level not in the profile</li><li class="r-unknown">Profile doesn&#39;t say where the company is located (tender favours Gauteng)</li><li class="r-unknown">Profile doesn&#39;t say what the company supplies</li></ul></details>
+    </td>
+    <td>1 bids, 0 similar
+      
+    </td>
+  </tr>
+  
+  </tbody>
+</table></div>
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>Found in the folders</h2>
+    
+    <ul class="files"><li>Thembeka/Bid Documents for W11573.pdf</li></ul>
+    
+    
+    <p class="muted small">From NASH TENDER SCHEDULE 14.10.2026.xlsx, sheet &#39;Medical and Consumables&#39;, row 723</p>
+  </section>
+
+  <section class="card">
+    <h2>History</h2>
+    <p class="muted">No changes yet.</p>
+  </section>
+</div>
+
+</div>
+<script src="../../static/tracker.js"></script>
+<script>
+Tracker.checklist(); Tracker.notes("aabdc54f79"); Tracker.outcomeSelects();
+Tracker.details(); Tracker.approval(); Tracker.handover();
+</script>
+</body>
+</html>
